@@ -1,0 +1,2 @@
+-e git://github.com/DrSkippy/Simple-n-grams.git@bbfd782614b39e2d0a1bc01fc6a75cc5df235e3e#egg=Simple-n-grams
+-e git://github.com/twitterdev/twitter-python-ads-sdk.git#egg=twitter-ads
