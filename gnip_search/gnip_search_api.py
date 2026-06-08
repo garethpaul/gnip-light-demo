@@ -3,6 +3,7 @@
 __author__="Scott Hendrickson, Josh Montague"
 
 import sys
+import ast
 import requests
 import json
 import codecs
@@ -112,6 +113,16 @@ class GnipSearchAPI(object):
         f = f.replace('(','_p_')
         f = f.replace(')','_p_')
         self.file_name_prefix = f[:42]
+
+    def parse_link_list(self, link_str):
+        """Parse the GNIP links field without evaluating it as Python code."""
+        try:
+            link_list = ast.literal_eval(link_str)
+        except (ValueError, SyntaxError):
+            return []
+        if not isinstance(link_list, list):
+            return []
+        return [link for link in link_list if isinstance(link, basestring)]
 
     def req(self):
         try:
@@ -236,8 +247,7 @@ class GnipSearchAPI(object):
                 print "+"*20
                 print link_str
                 if link_str != "GNIPEMPTYFIELD" and link_str != "None":
-                    exec("link_list=%s"%link_str)
-                    for l in link_list:
+                    for l in self.parse_link_list(link_str):
                         self.freq.add(l)
                 else:
                     self.freq.add("NoLinks")
