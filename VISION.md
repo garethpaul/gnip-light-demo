@@ -1,5 +1,8 @@
 ## GNIP Light Demo Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 GNIP Light Demo is a Python sample for GNIP/Twitter full-archive search and
 related API exploration.
 
