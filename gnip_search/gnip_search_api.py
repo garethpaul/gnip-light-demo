@@ -3,6 +3,7 @@
 __author__="Scott Hendrickson, Josh Montague"
 
 import sys
+import ast
 import requests
 import json
 import codecs
@@ -236,8 +237,19 @@ class GnipSearchAPI(object):
                 print "+"*20
                 print link_str
                 if link_str != "GNIPEMPTYFIELD" and link_str != "None":
-                    exec("link_list=%s"%link_str)
-                    for l in link_list:
+                    try:
+                        link_list = ast.literal_eval(link_str)
+                    except (SyntaxError, ValueError):
+                        self.freq.add("InvalidLinks")
+                        continue
+                    if isinstance(link_list, basestring):
+                        link_values = [link_list]
+                    else:
+                        try:
+                            link_values = list(link_list)
+                        except TypeError:
+                            link_values = [link_list]
+                    for l in link_values:
                         self.freq.add(l)
                 else:
                     self.freq.add("NoLinks")
