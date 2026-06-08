@@ -6,4 +6,5 @@
 - Replaced dynamic `exec` link parsing with `ast.literal_eval`.
 - Switched editable git dependencies from `git://` to HTTPS transport.
 - Fixed `Timeframe.days` after inverted date fallback and covered it with a unit test.
+- Added fail-fast GNIP credential validation and HTTP error handling.
 - Documented required GNIP credential environment variables and ignored local exports.

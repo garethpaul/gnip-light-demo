@@ -26,6 +26,7 @@ sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 # formatter of data from API
 TIME_FMT = "%Y%m%d%H%M"
 PAUSE = 3 # seconds between page requests
+REQUEST_TIMEOUT = int(os.environ.get("GNIP_REQUEST_TIMEOUT", "30"))
 
 #############################################
 # Some constants to configure column retrieval from TwacsCSV
@@ -119,7 +120,8 @@ class GnipSearchAPI(object):
             s = requests.Session()
             s.headers = {'Accept-encoding': 'gzip'}
             s.auth = (self.user, self.password)
-            res = s.post(self.stream_url, data=json.dumps(self.rule_payload))
+            res = s.post(self.stream_url, data=json.dumps(self.rule_payload), timeout=REQUEST_TIMEOUT)
+            res.raise_for_status()
         except requests.exceptions.ConnectionError, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
             sys.exit()

@@ -30,6 +30,7 @@ Current baseline:
 - API-supplied link data is parsed with `ast.literal_eval`, not `exec`.
 - Editable dependencies use HTTPS rather than unauthenticated `git://` transport.
 - GNIP credentials are read from environment variables.
+- Missing GNIP credentials and HTTP error responses fail before result parsing.
 - Local environment files and sample exports stay ignored.
 
 Next priorities:

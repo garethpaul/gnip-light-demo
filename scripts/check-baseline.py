@@ -67,9 +67,16 @@ require("exec(" not in api_source, "GNIP API parser must not execute API-supplie
 require("ast.literal_eval" in api_source, "GNIP link parsing must use ast.literal_eval")
 require("requests.Session()" in api_source and "s.auth = (self.user, self.password)" in api_source,
         "GNIP requests must keep credentials on the requests session auth field")
+require("REQUEST_TIMEOUT" in api_source and "timeout=REQUEST_TIMEOUT" in api_source,
+        "GNIP requests must use an explicit timeout")
+require("res.raise_for_status()" in api_source,
+        "GNIP requests must fail on HTTP error responses")
 
 for env_name in ["GNIP_USER_NAME", "GNIP_PASSWORD", "GNIP_SEARCH_ENDPOINT"]:
-    require(env_name in wrapper_source, f"{env_name} must be read from the environment")
+    require(f"required_environment('{env_name}')" in wrapper_source,
+            f"{env_name} must use fail-fast environment validation")
+require("GNIPConfigurationError" in wrapper_source and "Missing required environment variable" in wrapper_source,
+        "wrapper must raise a clear configuration error for missing credentials")
 require('GnipSearchAPI("USER"' not in wrapper_source and 'GnipSearchAPI("PASSWORD"' not in wrapper_source,
         "wrapper must not pass literal demo credentials to GnipSearchAPI")
 

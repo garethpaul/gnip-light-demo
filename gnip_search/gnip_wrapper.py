@@ -4,6 +4,18 @@ from timeframe import Timeframe
 import datetime
 import os
 
+
+class GNIPConfigurationError(Exception):
+    pass
+
+
+def required_environment(name):
+    value = os.environ.get(name)
+    if not value:
+        raise GNIPConfigurationError("Missing required environment variable: %s" % name)
+    return value
+
+
 class GNIP:
     """
     Container wrapper for the GNIPSearchAPI
@@ -34,9 +46,9 @@ class GNIP:
         """
         Returns GNIPSearchAPI
         """
-        return GnipSearchAPI(os.environ.get('GNIP_USER_NAME'),
-                             os.environ.get('GNIP_PASSWORD'),
-                             os.environ.get('GNIP_SEARCH_ENDPOINT'),
+        return GnipSearchAPI(required_environment('GNIP_USER_NAME'),
+                             required_environment('GNIP_PASSWORD'),
+                             required_environment('GNIP_SEARCH_ENDPOINT'),
                              paged=False)
 
     def get_timeline(self):

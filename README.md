@@ -51,6 +51,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Set `GNIP_USER_NAME`, `GNIP_PASSWORD`, and `GNIP_SEARCH_ENDPOINT` in the local environment before live API calls.
 - `step1.py` prints retrieved data for the sample query.
 - `step2.py` writes the sample CSV export; generated exports are intentionally ignored.
+- Missing GNIP environment variables raise a clear configuration error before the request is built.
 
 ## Testing and Verification
 
@@ -63,6 +64,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - GNIP credentials must come from `GNIP_USER_NAME`, `GNIP_PASSWORD`, and `GNIP_SEARCH_ENDPOINT`; do not commit credentials or retrieved tweet exports.
+- GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
 
