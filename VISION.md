@@ -39,7 +39,7 @@ GNIP/Twitter APIs may expose private credentials and sensitive social data.
 Credentials must stay in local environment/config, and retrieved data should not
 be committed unless it is explicitly public and safe as a fixture.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - API credentials, tokens, or customer exports
 - Bulk social data dumps
