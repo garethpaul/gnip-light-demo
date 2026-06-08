@@ -10,9 +10,9 @@
   <circle cx="1014" cy="82" r="18" fill="#f97316"/>
   <text x="76" y="82" font-size="36" fill="#ffffff" font-weight="700">gnip-light-demo</text>
   <text x="76" y="124" font-size="20" fill="#cbd5e1">Python project</text>
-  <text x="76" y="206" font-size="24" fill="#111827">gnip-light-demo Overview `garethpaul/gnip-light-demo` is a Python</text>
-<text x="76" y="240" font-size="24" fill="#111827">project. The checked-in files describe a Python project with the</text>
-<text x="76" y="274" font-size="24" fill="#111827">structure summarized below. This README is based on the checked-in</text>
+  <text x="76" y="206" font-size="24" fill="#111827">gnip-light-demo &lt;!-- README-OVERVIEW-IMAGE --&gt; Overview</text>
+<text x="76" y="240" font-size="24" fill="#111827">`garethpaul/gnip-light-demo` is a Python project. The checked-in</text>
+<text x="76" y="274" font-size="24" fill="#111827">files describe a Python project with the structure summarized below.</text>
 
   <rect x="76" y="286" width="316" height="276" rx="14" fill="#eff6ff" stroke="#bfdbfe"/>
   <text x="102" y="328" font-size="24" font-weight="700" fill="#1d4ed8">Code Shape</text>
