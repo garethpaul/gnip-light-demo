@@ -55,7 +55,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Testing and Verification
 
-- Run `make check` for static syntax, timeframe unit coverage, and credential/dependency guardrails that do not require GNIP credentials.
+- Run `make check` for static syntax, timeframe unit coverage, and credential/dependency/request guardrails that do not require GNIP credentials.
 - Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -64,6 +64,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - GNIP credentials must come from `GNIP_USER_NAME`, `GNIP_PASSWORD`, and `GNIP_SEARCH_ENDPOINT`; do not commit credentials or retrieved tweet exports.
+- GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes

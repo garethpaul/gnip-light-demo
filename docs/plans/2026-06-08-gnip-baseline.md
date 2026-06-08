@@ -18,6 +18,7 @@ API calls.
 - Keep generated tweet exports and local environment files out of git.
 - Cover timeframe parsing and inverted-date fallback with a local unit test.
 - Fail fast when GNIP credentials are missing or HTTP requests fail.
+- Add an explicit timeout for GNIP API requests.
 
 ## Work Items
 
@@ -26,7 +27,7 @@ API calls.
 3. Switched editable git dependencies from `git://` to `git+https://`.
 4. Added `.gitignore` entries for Python caches, local env files, and sample exports.
 5. Fixed `Timeframe.days` after invalid date fallback and added a regression test.
-6. Added clear missing-credential validation and HTTP error handling.
+6. Added clear missing-credential validation, request timeouts, and HTTP error handling.
 7. Updated README, VISION, and CHANGES with the baseline.
 
 ## Verification
