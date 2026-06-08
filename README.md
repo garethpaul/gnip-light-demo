@@ -1,5 +1,8 @@
 # GNIP Demo
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 Getting started
 
 ```pip install -r requirements.txt```
