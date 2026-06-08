@@ -11,8 +11,8 @@
   <text x="76" y="82" font-size="36" fill="#ffffff" font-weight="700">gnip-light-demo</text>
   <text x="76" y="124" font-size="20" fill="#cbd5e1">Python project</text>
   <text x="76" y="206" font-size="24" fill="#111827">gnip-light-demo Overview `garethpaul/gnip-light-demo` is a Python</text>
-<text x="76" y="240" font-size="24" fill="#111827">project. No GitHub description is currently set. This README is</text>
-<text x="76" y="274" font-size="24" fill="#111827">based on the checked-in source, manifests, scripts, and repository</text>
+<text x="76" y="240" font-size="24" fill="#111827">project. The checked-in files describe a Python project with the</text>
+<text x="76" y="274" font-size="24" fill="#111827">structure summarized below. This README is based on the checked-in</text>
 
   <rect x="76" y="286" width="316" height="276" rx="14" fill="#eff6ff" stroke="#bfdbfe"/>
   <text x="102" y="328" font-size="24" font-weight="700" fill="#1d4ed8">Code Shape</text>
