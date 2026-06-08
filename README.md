@@ -2,7 +2,7 @@
 
 ## Overview
 
-`garethpaul/gnip-light-demo` is a Python project. No GitHub description is currently set.
+`garethpaul/gnip-light-demo` is a Python project. The checked-in files describe a Python project with the structure summarized below.
 
 This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: Python (7).
 
@@ -67,10 +67,4 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Contributing
 
 Keep changes small and tied to the project that is already present in this repository. For code changes, document the toolchain used, avoid committing generated dependency directories or local configuration, and update this README when setup or verification steps change.
-
-## Existing Project Notes
-
-Prior README summary:
-
-> GNIP Demo <!-- README-OVERVIEW-IMAGE --> Getting started from gnip_search.tweets import FullArchiveSearch query_count = 10000  # int(request.GET.get("embedCount", TWEET_QUERY_COUNT)) export = None query = "#JustinBieber" tweets = FullArchiveSearch(query=query, query_count=query_count)
 
