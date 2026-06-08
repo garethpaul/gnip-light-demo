@@ -35,6 +35,11 @@ Contribution rules:
 
 ## Security And Data
 
+Canonical security policy and reporting:
+
+- [`SECURITY.md`](SECURITY.md)
+
+
 GNIP/Twitter APIs may expose private credentials and sensitive social data.
 Credentials must stay in local environment/config, and retrieved data should not
 be committed unless it is explicitly public and safe as a fixture.
