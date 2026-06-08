@@ -45,3 +45,6 @@ be committed unless it is explicitly public and safe as a fixture.
 - Bulk social data dumps
 - Live-only tests as the default check path
 - Dependency changes that obscure API compatibility
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
