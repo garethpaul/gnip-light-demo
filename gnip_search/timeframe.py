@@ -15,11 +15,12 @@ class Timeframe:
         self.end = self.get_end(end)
         self.start = self.get_start(start)
         self.interval = interval
-        self.days = (self.end-self.start).days
 
         # if dates wrong, use default
         if self.start > self.end:
             self.start = self.end - self.TIMEDELTA_DEFAULT_TIMEFRAME
+
+        self.days = (self.end - self.start).days
 
     def get_end(self, end):
         """

@@ -21,6 +21,16 @@ Priority:
 - Keep GNIP/Twitter credentials out of source control
 - Make Python 2 and editable dependency assumptions visible
 - Avoid committing retrieved tweet exports or private customer data
+- Keep the static safety baseline passing for parser, credential, and dependency transport guardrails
+
+Current baseline:
+
+- `make check` verifies legacy Python syntax when Python 2 is available.
+- Timeframe parsing and invalid-range fallback have local unit coverage.
+- API-supplied link data is parsed with `ast.literal_eval`, not `exec`.
+- Editable dependencies use HTTPS rather than unauthenticated `git://` transport.
+- GNIP credentials are read from environment variables.
+- Local environment files and sample exports stay ignored.
 
 Next priorities:
 

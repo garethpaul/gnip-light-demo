@@ -11,8 +11,12 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 
 ## Repository Contents
 
+- `CHANGES.md` - concise history of maintenance changes
+- `Makefile` - local verification entry point
 - `README.md` - project overview and local usage notes
 - `requirements.txt` - Python dependency or packaging metadata
+- `scripts/check-baseline.py` - static legacy GNIP demo checks
+- `tests/test_timeframe.py` - local unit coverage for timeframe behavior
 - `gnip_search` - source or example code
 - `SECURITY.md` - security reporting and disclosure guidance
 - `VISION.md` - project direction and maintenance guardrails
@@ -21,8 +25,8 @@ Additional scan context:
 
 - Source directories: gnip_search
 - Dependency and build manifests: requirements.txt
-- Entry points or build surfaces: none detected
-- Test-looking files: no obvious test files detected
+- Entry points or build surfaces: Makefile, step1.py, step2.py
+- Test-looking files: scripts/check-baseline.py, tests/test_timeframe.py
 
 ## Getting Started
 
@@ -30,6 +34,7 @@ Additional scan context:
 
 - Git
 - Python matching the era of the project
+- Python 3 for static verification
 
 ### Setup
 
@@ -43,17 +48,21 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Running or Using the Project
 
-- No single runtime entry point was identified. Start by reading the source files and manifests listed above.
+- Set `GNIP_USER_NAME`, `GNIP_PASSWORD`, and `GNIP_SEARCH_ENDPOINT` in the local environment before live API calls.
+- `step1.py` prints retrieved data for the sample query.
+- `step2.py` writes the sample CSV export; generated exports are intentionally ignored.
 
 ## Testing and Verification
 
-- No dedicated automated test command was identified from the checked-in files. Verify changes by running the relevant build or manually exercising the sample.
+- Run `make check` for static syntax, timeframe unit coverage, and credential/dependency guardrails that do not require GNIP credentials.
+- Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
+- GNIP credentials must come from `GNIP_USER_NAME`, `GNIP_PASSWORD`, and `GNIP_SEARCH_ENDPOINT`; do not commit credentials or retrieved tweet exports.
 
 ## Security and Privacy Notes
 
@@ -64,6 +73,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 ## Maintenance Notes
 
+- This is a legacy Python 2 sample. Keep Python 2/API compatibility changes separate from static hardening where practical.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 
