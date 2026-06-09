@@ -66,6 +66,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
 - `make check` verifies the sample entry points keep live GNIP requests and
   CSV writes behind `__main__` guards.
+- Paged GNIP output filename prefixes are normalized to a conservative filename
+  character set before JSON exports are written.
 - Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -99,6 +101,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   entrypoint guard.
 - See `docs/plans/2026-06-09-make-gate-aliases.md` for local verification
   target guardrails.
+- See `docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md` for paged export
+  filename prefix sanitization.
 
 ## Contributing
 

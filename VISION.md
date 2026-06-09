@@ -39,6 +39,8 @@ Current baseline:
   working tree.
 - Sample entry points keep live GNIP calls and CSV writes behind main guards so
   imports are safe during inspection or future tests.
+- Paged GNIP output filename prefixes are normalized to a conservative filename
+  character set before JSON exports are written.
 - Local verification targets stay available while the legacy Python 2 runtime
   remains static-check only.
 

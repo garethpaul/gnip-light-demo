@@ -14,6 +14,7 @@ BYTECODE_PLAN = ROOT / "docs/plans/2026-06-09-python-bytecode-artifact-guard.md"
 ENDPOINT_PARTS_PLAN = ROOT / "docs/plans/2026-06-09-gnip-endpoint-url-parts.md"
 ENTRYPOINT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-sample-entrypoints.md"
 MAKE_GATES_PLAN = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
+EXPORT_PREFIX_PLAN = ROOT / "docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md"
 
 
 def fail(message):
@@ -61,6 +62,7 @@ required_files = [
     "docs/plans/2026-06-09-python-bytecode-artifact-guard.md",
     "docs/plans/2026-06-09-gnip-sample-entrypoints.md",
     "docs/plans/2026-06-09-make-gate-aliases.md",
+    "docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md",
 ]
 
 for required_file in required_files:
@@ -100,6 +102,12 @@ require("REQUEST_TIMEOUT = request_timeout()" in api_source,
         "GNIP request timeout constant must use the validation helper")
 require("res.raise_for_status()" in api_source,
         "GNIP requests must fail on HTTP error responses")
+require("def safe_file_name_prefix" in api_source and r"[^A-Za-z0-9._-]+" in api_source,
+        "GNIP output file prefixes must use a conservative filename character set")
+require("prefix.strip('._')" in api_source and 'prefix or "query"' in api_source,
+        "GNIP output file prefixes must avoid empty, dot, or underscore-only names")
+require("self.file_name_prefix = self.safe_file_name_prefix(f)" in api_source,
+        "GNIP output file prefix generation must use the sanitizer")
 
 for env_name in ["GNIP_USER_NAME", "GNIP_PASSWORD"]:
     require(f"required_environment('{env_name}')" in wrapper_source,
@@ -144,6 +152,8 @@ require("Python bytecode artifacts" in readme,
         "README must document the bytecode artifact guard")
 require("Importing the sample scripts does not trigger live GNIP requests" in readme,
         "README must document the sample entrypoint guard")
+require("output filename prefixes" in readme and "conservative filename" in readme and "character set" in readme,
+        "README must document GNIP output filename prefix sanitization")
 require("make lint" in vision and "make test" in vision and "make build" in vision and "literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
 require("no embedded credentials, query string, or fragment" in vision,
@@ -152,6 +162,8 @@ require("bytecode artifacts" in vision,
         "VISION must describe the bytecode artifact guard")
 require("entry points keep live GNIP calls and CSV writes behind main guards" in vision,
         "VISION must describe the sample entrypoint guard")
+require("output filename prefixes" in vision and "conservative filename" in vision and "character set" in vision,
+        "VISION must describe GNIP output filename prefix sanitization")
 require("make lint" in changes and "make test" in changes and "make build" in changes and "literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
 require("embedded credentials, query strings, or fragments" in changes,
@@ -160,6 +172,8 @@ require("bytecode artifacts" in changes,
         "CHANGES must record the bytecode artifact guard")
 require("sample scripts behind main guards" in changes,
         "CHANGES must record the sample entrypoint guard")
+require("output filename prefixes" in changes,
+        "CHANGES must record the output filename prefix sanitizer")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
@@ -174,6 +188,8 @@ require("status: completed" in entrypoint_plan, "sample entrypoint plan must be 
 require("make check" in entrypoint_plan, "sample entrypoint plan must record make check verification")
 make_gates_plan = MAKE_GATES_PLAN.read_text() if MAKE_GATES_PLAN.exists() else ""
 require("status: completed" in make_gates_plan, "Make gate alias plan must be marked completed")
+export_prefix_plan = EXPORT_PREFIX_PLAN.read_text() if EXPORT_PREFIX_PLAN.exists() else ""
+require("status: completed" in export_prefix_plan, "GNIP export prefix sanitizer plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:

@@ -4,6 +4,8 @@
 
 - Added `make lint`, `make test`, and `make build` aliases so local verification
   has the expected pre-push gate targets in addition to `make check`.
+- Normalized paged GNIP output filename prefixes to a conservative filename
+  character set before JSON exports are written.
 - Moved live sample scripts behind main guards and added a baseline check so
   imports do not trigger GNIP requests or CSV writes.
 

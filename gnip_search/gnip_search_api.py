@@ -119,14 +119,15 @@ class GnipSearchAPI(object):
                     e += dt.group(i+1)
                 self.toDate = e
 
+    def safe_file_name_prefix(self, value):
+        """Creates a file-safe prefix from an input rule."""
+        prefix = re.sub(r'[^A-Za-z0-9._-]+', '_', value)
+        prefix = prefix.strip('._')
+        return (prefix or "query")[:42]
+
     def name_munger(self, f):
         """Creates a file name per input rule when reading multiple input rules."""
-        f = re.sub(' +','_',f)
-        f = f.replace(':','_')
-        f = f.replace('"','_Q_')
-        f = f.replace('(','_p_')
-        f = f.replace(')','_p_')
-        self.file_name_prefix = f[:42]
+        self.file_name_prefix = self.safe_file_name_prefix(f)
 
     def req(self):
         try:
