@@ -3,6 +3,7 @@ from gnip_search_api import QueryError as GNIPQueryError
 from timeframe import Timeframe
 import datetime
 import os
+import urlparse
 
 
 class GNIPConfigurationError(Exception):
@@ -10,9 +11,17 @@ class GNIPConfigurationError(Exception):
 
 
 def required_environment(name):
-    value = os.environ.get(name)
+    value = os.environ.get(name, "").strip()
     if not value:
         raise GNIPConfigurationError("Missing required environment variable: %s" % name)
+    return value
+
+
+def required_https_endpoint(name):
+    value = required_environment(name)
+    parsed = urlparse.urlsplit(value)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise GNIPConfigurationError("%s must be an HTTPS URL with a host" % name)
     return value
 
 
@@ -48,7 +57,7 @@ class GNIP:
         """
         return GnipSearchAPI(required_environment('GNIP_USER_NAME'),
                              required_environment('GNIP_PASSWORD'),
-                             required_environment('GNIP_SEARCH_ENDPOINT'),
+                             required_https_endpoint('GNIP_SEARCH_ENDPOINT'),
                              paged=False)
 
     def get_timeline(self):

@@ -43,6 +43,7 @@ required_files = [
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
+    "docs/plans/2026-06-09-gnip-endpoint-validation.md",
 ]
 
 for required_file in required_files:
@@ -72,11 +73,13 @@ require("REQUEST_TIMEOUT" in api_source and "timeout=REQUEST_TIMEOUT" in api_sou
 require("res.raise_for_status()" in api_source,
         "GNIP requests must fail on HTTP error responses")
 
-for env_name in ["GNIP_USER_NAME", "GNIP_PASSWORD", "GNIP_SEARCH_ENDPOINT"]:
+for env_name in ["GNIP_USER_NAME", "GNIP_PASSWORD"]:
     require(f"required_environment('{env_name}')" in wrapper_source,
             f"{env_name} must use fail-fast environment validation")
 require("GNIPConfigurationError" in wrapper_source and "Missing required environment variable" in wrapper_source,
         "wrapper must raise a clear configuration error for missing credentials")
+require("required_https_endpoint('GNIP_SEARCH_ENDPOINT')" in wrapper_source and "urlparse.urlsplit" in wrapper_source and "parsed.netloc" in wrapper_source,
+        "GNIP_SEARCH_ENDPOINT must use fail-fast HTTPS endpoint validation")
 require('GnipSearchAPI("USER"' not in wrapper_source and 'GnipSearchAPI("PASSWORD"' not in wrapper_source,
         "wrapper must not pass literal demo credentials to GnipSearchAPI")
 
@@ -85,13 +88,15 @@ require("*.pyc" in gitignore and "__pycache__/" in gitignore and ".env" in gitig
 require("*.csv" in gitignore and "bliebers.csv" in gitignore,
         "sample CSV exports must stay ignored")
 
-require("make check" in readme and "GNIP_USER_NAME" in readme,
+require("make check" in readme and "GNIP_USER_NAME" in readme and "HTTPS URL with a host" in readme,
         "README must document baseline checks and credential environment variables")
-require("literal_eval" in vision and "git://" in vision,
+require("literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
 require("literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
 require("status: completed" in plan, "baseline plan must be marked completed")
+endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
+require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:
