@@ -42,6 +42,8 @@ Current baseline:
 - Paged GNIP output filename prefixes are normalized to a conservative filename
   character set before JSON exports are written.
 - GNIP request timeout exceptions fail with a clear error before result parsing.
+- GNIP date filters must match `YYYY-MM-DD HH:MM` before API request dates are
+  derived.
 - Local verification targets stay available while the legacy Python 2 runtime
   remains static-check only.
 
@@ -50,6 +52,7 @@ Next priorities:
 - Add credential setup and sample query documentation
 - Port to supported Python and maintained Twitter/X API clients if revived
 - Add tests around query construction and timeframe handling
+- Keep GNIP date filters strict if query construction is modernized
 - Separate publishable fixtures from live API data
 
 Contribution rules:

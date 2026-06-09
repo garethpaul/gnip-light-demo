@@ -30,6 +30,8 @@ Helpful reports include:
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - GNIP request timeout exceptions should remain explicit so slow upstream calls
   do not produce noisy tracebacks or continue into result parsing.
+- GNIP date filters should reject malformed delimiters before request payloads
+  are sent to live APIs.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found secret-like configuration names that require careful review before use; changes in those areas should receive security-focused review before merge.
 - Dependency manifests detected: requirements.txt. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.

@@ -70,6 +70,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   character set before JSON exports are written.
 - GNIP request timeout exceptions exit with a clear error instead of falling
   through to result parsing or a traceback.
+- GNIP date filters must match the documented `YYYY-MM-DD HH:MM` format before
+  the API-specific date strings are built.
 - Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -83,6 +85,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it; the value must be a positive integer number of seconds.
 - GNIP request timeout exceptions are handled with a clear error before result
   parsing.
+- GNIP date filters reject malformed delimiters before request payload dates are
+  derived.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
@@ -109,6 +113,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   filename prefix sanitization.
 - See `docs/plans/2026-06-09-gnip-timeout-exception-handling.md` for GNIP
   request timeout exception handling.
+- See `docs/plans/2026-06-09-gnip-date-format-validation.md` for strict GNIP
+  date filter validation.
 
 ## Contributing
 

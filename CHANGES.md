@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Tightened GNIP date filters to the documented `YYYY-MM-DD HH:MM` format before
+  API date strings are derived.
 - Handled GNIP request timeout exceptions with a clear error before result
   parsing.
 - Added `make lint`, `make test`, and `make build` aliases so local verification

@@ -26,6 +26,7 @@ sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 # formatter of data from API
 TIME_FMT = "%Y%m%d%H%M"
 PAUSE = 3 # seconds between page requests
+DATE_RE = re.compile(r"^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$")
 
 
 def request_timeout():
@@ -97,27 +98,20 @@ class GnipSearchAPI(object):
 
     def set_dates(self, start, end):
         # re for the acceptable datetime formats
-        timeRE = re.compile("([0-9]{4}).([0-9]{2}).([0-9]{2}).([0-9]{2}):([0-9]{2})")
         if start:
-            dt = re.search(timeRE, start)
+            dt = DATE_RE.match(start)
             if not dt:
                 print >> sys.stderr, "Error. Invalid start-date format: %s \n"%str(start)
                 sys.exit()
             else:
-                f =''
-                for i in range(re.compile(timeRE).groups):
-                    f += dt.group(i+1)
-                self.fromDate = f
+                self.fromDate = ''.join(dt.groups())
         if end:
-            dt = re.search(timeRE, end)
+            dt = DATE_RE.match(end)
             if not dt:
                 print >> sys.stderr, "Error. Invalid end-date format: %s \n"%str(end)
                 sys.exit()
             else:
-                e =''
-                for i in range(re.compile(timeRE).groups):
-                    e += dt.group(i+1)
-                self.toDate = e
+                self.toDate = ''.join(dt.groups())
 
     def safe_file_name_prefix(self, value):
         """Creates a file-safe prefix from an input rule."""

@@ -16,6 +16,7 @@ ENTRYPOINT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-sample-entrypoints.md"
 MAKE_GATES_PLAN = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
 EXPORT_PREFIX_PLAN = ROOT / "docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md"
 TIMEOUT_EXCEPTION_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-exception-handling.md"
+DATE_FORMAT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-format-validation.md"
 
 
 def fail(message):
@@ -65,6 +66,7 @@ required_files = [
     "docs/plans/2026-06-09-make-gate-aliases.md",
     "docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md",
     "docs/plans/2026-06-09-gnip-timeout-exception-handling.md",
+    "docs/plans/2026-06-09-gnip-date-format-validation.md",
 ]
 
 for required_file in required_files:
@@ -113,6 +115,18 @@ require("prefix.strip('._')" in api_source and 'prefix or "query"' in api_source
         "GNIP output file prefixes must avoid empty, dot, or underscore-only names")
 require("self.file_name_prefix = self.safe_file_name_prefix(f)" in api_source,
         "GNIP output file prefix generation must use the sanitizer")
+require('DATE_RE = re.compile(r"^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$")' in api_source,
+        "GNIP date parsing must use an anchored YYYY-MM-DD HH:MM regex",
+        )
+require("dt = DATE_RE.match(start)" in api_source and "dt = DATE_RE.match(end)" in api_source,
+        "GNIP date parsing must match the full start and end strings",
+        )
+require("self.fromDate = ''.join(dt.groups())" in api_source and "self.toDate = ''.join(dt.groups())" in api_source,
+        "GNIP date parsing must build API dates from captured components",
+        )
+require('re.compile("([0-9]{4}).' not in api_source,
+        "GNIP date parsing must not accept arbitrary delimiters",
+        )
 
 for env_name in ["GNIP_USER_NAME", "GNIP_PASSWORD"]:
     require(f"required_environment('{env_name}')" in wrapper_source,
@@ -161,6 +175,8 @@ require("output filename prefixes" in readme and "conservative filename" in read
         "README must document GNIP output filename prefix sanitization")
 require("GNIP request timeout exceptions" in readme and "clear error" in readme,
         "README must document GNIP request timeout exception handling")
+require("GNIP date filters" in readme and "YYYY-MM-DD HH:MM" in readme,
+        "README must document strict GNIP date filter validation")
 require("make lint" in vision and "make test" in vision and "make build" in vision and "literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
 require("no embedded credentials, query string, or fragment" in vision,
@@ -173,6 +189,8 @@ require("output filename prefixes" in vision and "conservative filename" in visi
         "VISION must describe GNIP output filename prefix sanitization")
 require("GNIP request timeout exceptions" in vision and "clear error" in vision,
         "VISION must describe GNIP request timeout exception handling")
+require("GNIP date filters" in vision and "YYYY-MM-DD HH:MM" in vision,
+        "VISION must describe strict GNIP date filter validation")
 require("make lint" in changes and "make test" in changes and "make build" in changes and "literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
 require("embedded credentials, query strings, or fragments" in changes,
@@ -185,6 +203,8 @@ require("output filename prefixes" in changes,
         "CHANGES must record the output filename prefix sanitizer")
 require("GNIP request timeout exceptions" in changes,
         "CHANGES must record GNIP request timeout exception handling")
+require("GNIP date filters" in changes,
+        "CHANGES must record GNIP date filter validation")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
@@ -203,6 +223,8 @@ export_prefix_plan = EXPORT_PREFIX_PLAN.read_text() if EXPORT_PREFIX_PLAN.exists
 require("status: completed" in export_prefix_plan, "GNIP export prefix sanitizer plan must be marked completed")
 timeout_exception_plan = TIMEOUT_EXCEPTION_PLAN.read_text() if TIMEOUT_EXCEPTION_PLAN.exists() else ""
 require("status: completed" in timeout_exception_plan, "GNIP timeout exception handling plan must be marked completed")
+date_format_plan = DATE_FORMAT_PLAN.read_text() if DATE_FORMAT_PLAN.exists() else ""
+require("status: completed" in date_format_plan, "GNIP date format validation plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:
