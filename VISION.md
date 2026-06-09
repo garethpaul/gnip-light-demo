@@ -33,6 +33,8 @@ Current baseline:
   `GNIP_SEARCH_ENDPOINT` must parse as an HTTPS URL with a host.
 - Missing GNIP credentials, invalid request-timeout configuration, slow GNIP requests, and HTTP error responses fail before result parsing.
 - Local environment files and sample exports stay ignored.
+- Baseline checks should not leave generated Python bytecode artifacts in the
+  working tree.
 
 Next priorities:
 

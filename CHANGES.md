@@ -9,4 +9,6 @@
 - Added fail-fast GNIP credential validation, request timeouts, and HTTP error handling.
 - Required `GNIP_SEARCH_ENDPOINT` to parse as an HTTPS URL with a host.
 - Required `GNIP_REQUEST_TIMEOUT` overrides to be positive integers.
+- Rejected generated Python bytecode artifacts during baseline verification and
+  disabled bytecode writes for Python 2 unit discovery.
 - Documented required GNIP credential environment variables and ignored local exports.

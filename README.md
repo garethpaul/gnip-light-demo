@@ -57,6 +57,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Run `make check` for static syntax, timeframe unit coverage, and credential/dependency/request guardrails that do not require GNIP credentials.
+- `make check` also rejects generated Python bytecode artifacts so local
+  compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
 - Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -82,6 +84,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This is a legacy Python 2 sample. Keep Python 2/API compatibility changes separate from static hardening where practical.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-09-python-bytecode-artifact-guard.md` for the
+  bytecode artifact baseline.
 
 ## Contributing
 

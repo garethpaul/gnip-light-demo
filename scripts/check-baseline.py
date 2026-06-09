@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+import os
 import shutil
 import subprocess
 import sys
@@ -9,6 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs/plans/2026-06-08-gnip-baseline.md"
 TIMEOUT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-validation.md"
+BYTECODE_PLAN = ROOT / "docs/plans/2026-06-09-python-bytecode-artifact-guard.md"
 
 
 def fail(message):
@@ -26,6 +28,12 @@ def read(path):
 def require(condition, message):
     if not condition:
         fail(message)
+
+
+def python_artifacts():
+    artifacts = [path for path in ROOT.rglob("*.pyc")]
+    artifacts += [path for path in ROOT.rglob("__pycache__") if path.is_dir()]
+    return sorted(str(path.relative_to(ROOT)) for path in artifacts)
 
 
 required_files = [
@@ -46,6 +54,7 @@ required_files = [
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-timeout-validation.md",
+    "docs/plans/2026-06-09-python-bytecode-artifact-guard.md",
 ]
 
 for required_file in required_files:
@@ -93,28 +102,47 @@ require('GnipSearchAPI("USER"' not in wrapper_source and 'GnipSearchAPI("PASSWOR
 
 require("*.pyc" in gitignore and "__pycache__/" in gitignore and ".env" in gitignore,
         "local Python artifacts and env files must stay ignored")
+require(not python_artifacts(),
+        "generated Python bytecode artifacts must be removed from the working tree")
 require("*.csv" in gitignore and "bliebers.csv" in gitignore,
         "sample CSV exports must stay ignored")
 
 require("make check" in readme and "GNIP_USER_NAME" in readme and "HTTPS URL with a host" in readme,
         "README must document baseline checks and credential environment variables")
+require("Python bytecode artifacts" in readme,
+        "README must document the bytecode artifact guard")
 require("literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
+require("bytecode artifacts" in vision,
+        "VISION must describe the bytecode artifact guard")
 require("literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
+require("bytecode artifacts" in changes,
+        "CHANGES must record the bytecode artifact guard")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
 timeout_plan = TIMEOUT_PLAN.read_text() if TIMEOUT_PLAN.exists() else ""
 require("status: completed" in timeout_plan, "request timeout validation plan must be marked completed")
+bytecode_plan = BYTECODE_PLAN.read_text() if BYTECODE_PLAN.exists() else ""
+require("status: completed" in bytecode_plan, "bytecode artifact guard plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:
     py_files = [str(path.relative_to(ROOT)) for path in sorted(ROOT.glob("*.py"))]
     py_files += [str(path.relative_to(ROOT)) for path in sorted((ROOT / "gnip_search").glob("*.py"))]
     py_files += [str(path.relative_to(ROOT)) for path in sorted((ROOT / "tests").glob("*.py"))]
-    subprocess.check_call([python2, "-m", "py_compile"] + py_files, cwd=str(ROOT))
-    subprocess.check_call([python2, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT))
+    syntax_check = (
+        "import sys\n"
+        "for filename in sys.argv[1:]:\n"
+        "    compile(open(filename, 'rb').read(), filename, 'exec')\n"
+    )
+    subprocess.check_call([python2, "-c", syntax_check] + py_files, cwd=str(ROOT))
+    env = dict(os.environ)
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    subprocess.check_call([python2, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT), env=env)
+    require(not python_artifacts(),
+            "baseline checks must not generate Python bytecode artifacts")
 else:
     print("check-baseline: python2 not found; skipped Python 2 syntax compilation and unit tests")
 
