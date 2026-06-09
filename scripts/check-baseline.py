@@ -8,6 +8,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs/plans/2026-06-08-gnip-baseline.md"
+TIMEOUT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-validation.md"
 
 
 def fail(message):
@@ -44,6 +45,7 @@ required_files = [
     "tests/test_timeframe.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
+    "docs/plans/2026-06-09-gnip-timeout-validation.md",
 ]
 
 for required_file in required_files:
@@ -70,6 +72,12 @@ require("requests.Session()" in api_source and "s.auth = (self.user, self.passwo
         "GNIP requests must keep credentials on the requests session auth field")
 require("REQUEST_TIMEOUT" in api_source and "timeout=REQUEST_TIMEOUT" in api_source,
         "GNIP requests must use an explicit timeout")
+require("def request_timeout()" in api_source and 'os.environ.get("GNIP_REQUEST_TIMEOUT", "30").strip()' in api_source,
+        "GNIP request timeout must be parsed through a validation helper")
+require("timeout <= 0" in api_source and "GNIP_REQUEST_TIMEOUT must be a positive integer" in api_source,
+        "GNIP request timeout must reject non-positive or non-integer values")
+require("REQUEST_TIMEOUT = request_timeout()" in api_source,
+        "GNIP request timeout constant must use the validation helper")
 require("res.raise_for_status()" in api_source,
         "GNIP requests must fail on HTTP error responses")
 
@@ -97,6 +105,8 @@ require("literal_eval" in changes and "HTTPS" in changes,
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
+timeout_plan = TIMEOUT_PLAN.read_text() if TIMEOUT_PLAN.exists() else ""
+require("status: completed" in timeout_plan, "request timeout validation plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:

@@ -26,7 +26,20 @@ sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 # formatter of data from API
 TIME_FMT = "%Y%m%d%H%M"
 PAUSE = 3 # seconds between page requests
-REQUEST_TIMEOUT = int(os.environ.get("GNIP_REQUEST_TIMEOUT", "30"))
+
+
+def request_timeout():
+    value = os.environ.get("GNIP_REQUEST_TIMEOUT", "30").strip()
+    try:
+        timeout = int(value)
+    except ValueError:
+        raise ValueError("GNIP_REQUEST_TIMEOUT must be a positive integer")
+    if timeout <= 0:
+        raise ValueError("GNIP_REQUEST_TIMEOUT must be a positive integer")
+    return timeout
+
+
+REQUEST_TIMEOUT = request_timeout()
 
 #############################################
 # Some constants to configure column retrieval from TwacsCSV

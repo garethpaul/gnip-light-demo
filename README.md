@@ -67,7 +67,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - GNIP credentials must come from `GNIP_USER_NAME`, `GNIP_PASSWORD`, and `GNIP_SEARCH_ENDPOINT`; do not commit credentials or retrieved tweet exports.
 - Whitespace-only credential values are rejected, and `GNIP_SEARCH_ENDPOINT`
   must parse as an HTTPS URL with a host before requests are built.
-- GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it.
+- GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it; the value must be a positive integer number of seconds.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
