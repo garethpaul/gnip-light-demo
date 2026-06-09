@@ -68,6 +68,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   CSV writes behind `__main__` guards.
 - Paged GNIP output filename prefixes are normalized to a conservative filename
   character set before JSON exports are written.
+- GNIP request timeout exceptions exit with a clear error instead of falling
+  through to result parsing or a traceback.
 - Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -79,6 +81,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Whitespace-only credential values are rejected, and `GNIP_SEARCH_ENDPOINT`
   must parse as an HTTPS URL with a host and no embedded credentials, query string, or fragment before requests are built.
 - GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it; the value must be a positive integer number of seconds.
+- GNIP request timeout exceptions are handled with a clear error before result
+  parsing.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
@@ -103,6 +107,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   target guardrails.
 - See `docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md` for paged export
   filename prefix sanitization.
+- See `docs/plans/2026-06-09-gnip-timeout-exception-handling.md` for GNIP
+  request timeout exception handling.
 
 ## Contributing
 

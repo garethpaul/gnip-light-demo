@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Handled GNIP request timeout exceptions with a clear error before result
+  parsing.
 - Added `make lint`, `make test`, and `make build` aliases so local verification
   has the expected pre-push gate targets in addition to `make check`.
 - Normalized paged GNIP output filename prefixes to a conservative filename

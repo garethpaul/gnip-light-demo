@@ -41,6 +41,7 @@ Current baseline:
   imports are safe during inspection or future tests.
 - Paged GNIP output filename prefixes are normalized to a conservative filename
   character set before JSON exports are written.
+- GNIP request timeout exceptions fail with a clear error before result parsing.
 - Local verification targets stay available while the legacy Python 2 runtime
   remains static-check only.
 

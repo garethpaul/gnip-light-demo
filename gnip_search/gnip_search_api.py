@@ -136,6 +136,9 @@ class GnipSearchAPI(object):
             s.auth = (self.user, self.password)
             res = s.post(self.stream_url, data=json.dumps(self.rule_payload), timeout=REQUEST_TIMEOUT)
             res.raise_for_status()
+        except requests.exceptions.Timeout, e:
+            print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
+            sys.exit()
         except requests.exceptions.ConnectionError, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
             sys.exit()
