@@ -44,6 +44,8 @@ Current baseline:
 - GNIP request timeout exceptions fail with a clear error before result parsing.
 - GNIP date filters must match `YYYY-MM-DD HH:MM` before API request dates are
   derived.
+- GNIP date filters reject impossible calendar values before compact API request
+  dates are derived.
 - Local verification targets stay available while the legacy Python 2 runtime
   remains static-check only.
 
@@ -53,6 +55,7 @@ Next priorities:
 - Port to supported Python and maintained Twitter/X API clients if revived
 - Add tests around query construction and timeframe handling
 - Keep GNIP date filters strict if query construction is modernized
+- Keep impossible calendar values out of live GNIP date payloads
 - Separate publishable fixtures from live API data
 
 Contribution rules:

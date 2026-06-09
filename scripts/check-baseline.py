@@ -17,6 +17,7 @@ MAKE_GATES_PLAN = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
 EXPORT_PREFIX_PLAN = ROOT / "docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md"
 TIMEOUT_EXCEPTION_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-exception-handling.md"
 DATE_FORMAT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-format-validation.md"
+DATE_VALUE_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-value-validation.md"
 
 
 def fail(message):
@@ -67,6 +68,7 @@ required_files = [
     "docs/plans/2026-06-09-gnip-export-prefix-sanitizer.md",
     "docs/plans/2026-06-09-gnip-timeout-exception-handling.md",
     "docs/plans/2026-06-09-gnip-date-format-validation.md",
+    "docs/plans/2026-06-09-gnip-date-value-validation.md",
 ]
 
 for required_file in required_files:
@@ -118,15 +120,21 @@ require("self.file_name_prefix = self.safe_file_name_prefix(f)" in api_source,
 require('DATE_RE = re.compile(r"^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$")' in api_source,
         "GNIP date parsing must use an anchored YYYY-MM-DD HH:MM regex",
         )
-require("dt = DATE_RE.match(start)" in api_source and "dt = DATE_RE.match(end)" in api_source,
+require("dt = DATE_RE.match(value)" in api_source,
         "GNIP date parsing must match the full start and end strings",
         )
-require("self.fromDate = ''.join(dt.groups())" in api_source and "self.toDate = ''.join(dt.groups())" in api_source,
+require("return ''.join(dt.groups())" in api_source,
         "GNIP date parsing must build API dates from captured components",
         )
 require('re.compile("([0-9]{4}).' not in api_source,
         "GNIP date parsing must not accept arbitrary delimiters",
         )
+require('INPUT_DATE_FMT = "%Y-%m-%d %H:%M"' in api_source and "def api_date_filter" in api_source,
+        "GNIP date parsing must keep a strict API date validation helper")
+require("datetime.datetime.strptime(value, INPUT_DATE_FMT)" in api_source and "Invalid %s-date value" in api_source,
+        "GNIP date parsing must reject impossible calendar date values")
+require('self.fromDate = api_date_filter(start, "start")' in api_source and 'self.toDate = api_date_filter(end, "end")' in api_source,
+        "GNIP start and end filters must use the strict API date validation helper")
 
 for env_name in ["GNIP_USER_NAME", "GNIP_PASSWORD"]:
     require(f"required_environment('{env_name}')" in wrapper_source,
@@ -177,6 +185,8 @@ require("GNIP request timeout exceptions" in readme and "clear error" in readme,
         "README must document GNIP request timeout exception handling")
 require("GNIP date filters" in readme and "YYYY-MM-DD HH:MM" in readme,
         "README must document strict GNIP date filter validation")
+require("impossible calendar values" in readme,
+        "README must document GNIP date value validation")
 require("make lint" in vision and "make test" in vision and "make build" in vision and "literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
 require("no embedded credentials, query string, or fragment" in vision,
@@ -191,6 +201,8 @@ require("GNIP request timeout exceptions" in vision and "clear error" in vision,
         "VISION must describe GNIP request timeout exception handling")
 require("GNIP date filters" in vision and "YYYY-MM-DD HH:MM" in vision,
         "VISION must describe strict GNIP date filter validation")
+require("impossible calendar values" in vision,
+        "VISION must describe GNIP date value validation")
 require("make lint" in changes and "make test" in changes and "make build" in changes and "literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
 require("embedded credentials, query strings, or fragments" in changes,
@@ -205,6 +217,8 @@ require("GNIP request timeout exceptions" in changes,
         "CHANGES must record GNIP request timeout exception handling")
 require("GNIP date filters" in changes,
         "CHANGES must record GNIP date filter validation")
+require("impossible calendar values" in changes,
+        "CHANGES must record GNIP date value validation")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
@@ -225,6 +239,8 @@ timeout_exception_plan = TIMEOUT_EXCEPTION_PLAN.read_text() if TIMEOUT_EXCEPTION
 require("status: completed" in timeout_exception_plan, "GNIP timeout exception handling plan must be marked completed")
 date_format_plan = DATE_FORMAT_PLAN.read_text() if DATE_FORMAT_PLAN.exists() else ""
 require("status: completed" in date_format_plan, "GNIP date format validation plan must be marked completed")
+date_value_plan = DATE_VALUE_PLAN.read_text() if DATE_VALUE_PLAN.exists() else ""
+require("status: completed" in date_value_plan, "GNIP date value validation plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:

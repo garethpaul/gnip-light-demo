@@ -25,6 +25,7 @@ sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 
 # formatter of data from API
 TIME_FMT = "%Y%m%d%H%M"
+INPUT_DATE_FMT = "%Y-%m-%d %H:%M"
 PAUSE = 3 # seconds between page requests
 DATE_RE = re.compile(r"^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$")
 
@@ -41,6 +42,19 @@ def request_timeout():
 
 
 REQUEST_TIMEOUT = request_timeout()
+
+
+def api_date_filter(value, label):
+    dt = DATE_RE.match(value)
+    if not dt:
+        print >> sys.stderr, "Error. Invalid %s-date format: %s \n"%(label, str(value))
+        sys.exit()
+    try:
+        datetime.datetime.strptime(value, INPUT_DATE_FMT)
+    except ValueError:
+        print >> sys.stderr, "Error. Invalid %s-date value: %s \n"%(label, str(value))
+        sys.exit()
+    return ''.join(dt.groups())
 
 #############################################
 # Some constants to configure column retrieval from TwacsCSV
@@ -99,19 +113,9 @@ class GnipSearchAPI(object):
     def set_dates(self, start, end):
         # re for the acceptable datetime formats
         if start:
-            dt = DATE_RE.match(start)
-            if not dt:
-                print >> sys.stderr, "Error. Invalid start-date format: %s \n"%str(start)
-                sys.exit()
-            else:
-                self.fromDate = ''.join(dt.groups())
+            self.fromDate = api_date_filter(start, "start")
         if end:
-            dt = DATE_RE.match(end)
-            if not dt:
-                print >> sys.stderr, "Error. Invalid end-date format: %s \n"%str(end)
-                sys.exit()
-            else:
-                self.toDate = ''.join(dt.groups())
+            self.toDate = api_date_filter(end, "end")
 
     def safe_file_name_prefix(self, value):
         """Creates a file-safe prefix from an input rule."""

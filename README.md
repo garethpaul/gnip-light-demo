@@ -72,6 +72,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   through to result parsing or a traceback.
 - GNIP date filters must match the documented `YYYY-MM-DD HH:MM` format before
   the API-specific date strings are built.
+- GNIP date filters also reject impossible calendar values before the compact
+  request payload dates are derived.
 - Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -87,6 +89,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   parsing.
 - GNIP date filters reject malformed delimiters before request payload dates are
   derived.
+- GNIP date filters reject impossible calendar values before request payload
+  dates are derived.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
@@ -115,6 +119,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   request timeout exception handling.
 - See `docs/plans/2026-06-09-gnip-date-format-validation.md` for strict GNIP
   date filter validation.
+- See `docs/plans/2026-06-09-gnip-date-value-validation.md` for GNIP date
+  value validation.
 
 ## Contributing
 
