@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-09
+
+- Moved live sample scripts behind main guards and added a baseline check so
+  imports do not trigger GNIP requests or CSV writes.
+
 ## 2026-06-08
 
 - Added `make check` for static legacy GNIP demo verification.

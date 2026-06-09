@@ -12,6 +12,7 @@ PLAN = ROOT / "docs/plans/2026-06-08-gnip-baseline.md"
 TIMEOUT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-validation.md"
 BYTECODE_PLAN = ROOT / "docs/plans/2026-06-09-python-bytecode-artifact-guard.md"
 ENDPOINT_PARTS_PLAN = ROOT / "docs/plans/2026-06-09-gnip-endpoint-url-parts.md"
+ENTRYPOINT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-sample-entrypoints.md"
 
 
 def fail(message):
@@ -57,6 +58,7 @@ required_files = [
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
     "docs/plans/2026-06-09-gnip-timeout-validation.md",
     "docs/plans/2026-06-09-python-bytecode-artifact-guard.md",
+    "docs/plans/2026-06-09-gnip-sample-entrypoints.md",
 ]
 
 for required_file in required_files:
@@ -65,6 +67,8 @@ for required_file in required_files:
 requirements = read("requirements.txt")
 api_source = read("gnip_search/gnip_search_api.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
+step1_source = read("step1.py")
+step2_source = read("step2.py")
 readme = read("README.md")
 vision = read("VISION.md")
 changes = read("CHANGES.md")
@@ -111,24 +115,46 @@ require(not python_artifacts(),
 require("*.csv" in gitignore and "bliebers.csv" in gitignore,
         "sample CSV exports must stay ignored")
 
+for script_name, source in [("step1.py", step1_source), ("step2.py", step2_source)]:
+    require("def main():" in source and 'if __name__ == "__main__":' in source,
+            "%s must keep live sample work behind a main guard" % script_name)
+    main_index = source.find("def main():")
+    guard_index = source.find('if __name__ == "__main__":')
+    require(main_index != -1 and guard_index != -1 and main_index < guard_index,
+            "%s must define main before the __main__ guard" % script_name)
+    for token in ["FullArchiveSearch(", "tweets.get_data()"]:
+        token_index = source.find(token)
+        require(token_index > main_index and token_index < guard_index,
+                "%s must not run GNIP sample calls at import time" % script_name)
+
+open_index = step2_source.find("with open('bliebers.csv', 'wb')")
+require(open_index > step2_source.find("def main():") and open_index < step2_source.find('if __name__ == "__main__":'),
+        "step2.py must not write the sample CSV at import time")
+
 require("make check" in readme and "GNIP_USER_NAME" in readme and "HTTPS URL with a host" in readme,
         "README must document baseline checks and credential environment variables")
 require("no embedded credentials, query string, or fragment" in readme,
         "README must document the GNIP endpoint URL-parts guard")
 require("Python bytecode artifacts" in readme,
         "README must document the bytecode artifact guard")
+require("Importing the sample scripts does not trigger live GNIP requests" in readme,
+        "README must document the sample entrypoint guard")
 require("literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
 require("no embedded credentials, query string, or fragment" in vision,
         "VISION must describe the GNIP endpoint URL-parts guard")
 require("bytecode artifacts" in vision,
         "VISION must describe the bytecode artifact guard")
+require("entry points keep live GNIP calls and CSV writes behind main guards" in vision,
+        "VISION must describe the sample entrypoint guard")
 require("literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
 require("embedded credentials, query strings, or fragments" in changes,
         "CHANGES must record the GNIP endpoint URL-parts guard")
 require("bytecode artifacts" in changes,
         "CHANGES must record the bytecode artifact guard")
+require("sample scripts behind main guards" in changes,
+        "CHANGES must record the sample entrypoint guard")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
@@ -138,6 +164,9 @@ bytecode_plan = BYTECODE_PLAN.read_text() if BYTECODE_PLAN.exists() else ""
 require("status: completed" in bytecode_plan, "bytecode artifact guard plan must be marked completed")
 endpoint_parts_plan = ENDPOINT_PARTS_PLAN.read_text() if ENDPOINT_PARTS_PLAN.exists() else ""
 require("status: completed" in endpoint_parts_plan, "endpoint URL-parts validation plan must be marked completed")
+entrypoint_plan = ENTRYPOINT_PLAN.read_text() if ENTRYPOINT_PLAN.exists() else ""
+require("status: completed" in entrypoint_plan, "sample entrypoint plan must be marked completed")
+require("make check" in entrypoint_plan, "sample entrypoint plan must record make check verification")
 
 python2 = shutil.which("python2")
 if python2:

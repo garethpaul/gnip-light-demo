@@ -35,6 +35,8 @@ Current baseline:
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
   working tree.
+- Sample entry points keep live GNIP calls and CSV writes behind main guards so
+  imports are safe during inspection or future tests.
 
 Next priorities:
 

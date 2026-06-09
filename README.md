@@ -52,6 +52,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - `GNIP_SEARCH_ENDPOINT` must be an HTTPS URL with a host and no embedded credentials, query string, or fragment.
 - `step1.py` prints retrieved data for the sample query.
 - `step2.py` writes the sample CSV export; generated exports are intentionally ignored.
+- Importing the sample scripts does not trigger live GNIP requests or CSV
+  writes; run them directly to execute their sample `main()` functions.
 - Missing GNIP environment variables raise a clear configuration error before the request is built.
 
 ## Testing and Verification
@@ -59,6 +61,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Run `make check` for static syntax, timeframe unit coverage, and credential/dependency/request guardrails that do not require GNIP credentials.
 - `make check` also rejects generated Python bytecode artifacts so local
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
+- `make check` verifies the sample entry points keep live GNIP requests and
+  CSV writes behind `__main__` guards.
 - Live GNIP calls still require local credentials and compatible legacy dependencies.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
@@ -88,6 +92,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   bytecode artifact baseline.
 - See `docs/plans/2026-06-09-gnip-endpoint-url-parts.md` for the endpoint
   URL-parts guard.
+- See `docs/plans/2026-06-09-gnip-sample-entrypoints.md` for the sample
+  entrypoint guard.
 
 ## Contributing
 
