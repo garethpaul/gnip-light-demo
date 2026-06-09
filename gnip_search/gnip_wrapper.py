@@ -20,8 +20,10 @@ def required_environment(name):
 def required_https_endpoint(name):
     value = required_environment(name)
     parsed = urlparse.urlsplit(value)
-    if parsed.scheme != "https" or not parsed.netloc:
-        raise GNIPConfigurationError("%s must be an HTTPS URL with a host" % name)
+    if (parsed.scheme != "https" or not parsed.netloc or
+            parsed.username or parsed.password or parsed.query or parsed.fragment):
+        raise GNIPConfigurationError(
+            "%s must be an HTTPS URL with a host and no embedded credentials, query string, or fragment" % name)
     return value
 
 

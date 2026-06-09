@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs/plans/2026-06-08-gnip-baseline.md"
 TIMEOUT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-validation.md"
 BYTECODE_PLAN = ROOT / "docs/plans/2026-06-09-python-bytecode-artifact-guard.md"
+ENDPOINT_PARTS_PLAN = ROOT / "docs/plans/2026-06-09-gnip-endpoint-url-parts.md"
 
 
 def fail(message):
@@ -53,6 +54,7 @@ required_files = [
     "tests/test_timeframe.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
+    "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
     "docs/plans/2026-06-09-gnip-timeout-validation.md",
     "docs/plans/2026-06-09-python-bytecode-artifact-guard.md",
 ]
@@ -97,6 +99,8 @@ require("GNIPConfigurationError" in wrapper_source and "Missing required environ
         "wrapper must raise a clear configuration error for missing credentials")
 require("required_https_endpoint('GNIP_SEARCH_ENDPOINT')" in wrapper_source and "urlparse.urlsplit" in wrapper_source and "parsed.netloc" in wrapper_source,
         "GNIP_SEARCH_ENDPOINT must use fail-fast HTTPS endpoint validation")
+require("parsed.username" in wrapper_source and "parsed.password" in wrapper_source and "parsed.query" in wrapper_source and "parsed.fragment" in wrapper_source,
+        "GNIP_SEARCH_ENDPOINT must reject embedded credentials, query strings, and fragments")
 require('GnipSearchAPI("USER"' not in wrapper_source and 'GnipSearchAPI("PASSWORD"' not in wrapper_source,
         "wrapper must not pass literal demo credentials to GnipSearchAPI")
 
@@ -109,14 +113,20 @@ require("*.csv" in gitignore and "bliebers.csv" in gitignore,
 
 require("make check" in readme and "GNIP_USER_NAME" in readme and "HTTPS URL with a host" in readme,
         "README must document baseline checks and credential environment variables")
+require("no embedded credentials, query string, or fragment" in readme,
+        "README must document the GNIP endpoint URL-parts guard")
 require("Python bytecode artifacts" in readme,
         "README must document the bytecode artifact guard")
 require("literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
+require("no embedded credentials, query string, or fragment" in vision,
+        "VISION must describe the GNIP endpoint URL-parts guard")
 require("bytecode artifacts" in vision,
         "VISION must describe the bytecode artifact guard")
 require("literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
+require("embedded credentials, query strings, or fragments" in changes,
+        "CHANGES must record the GNIP endpoint URL-parts guard")
 require("bytecode artifacts" in changes,
         "CHANGES must record the bytecode artifact guard")
 require("status: completed" in plan, "baseline plan must be marked completed")
@@ -126,6 +136,8 @@ timeout_plan = TIMEOUT_PLAN.read_text() if TIMEOUT_PLAN.exists() else ""
 require("status: completed" in timeout_plan, "request timeout validation plan must be marked completed")
 bytecode_plan = BYTECODE_PLAN.read_text() if BYTECODE_PLAN.exists() else ""
 require("status: completed" in bytecode_plan, "bytecode artifact guard plan must be marked completed")
+endpoint_parts_plan = ENDPOINT_PARTS_PLAN.read_text() if ENDPOINT_PARTS_PLAN.exists() else ""
+require("status: completed" in endpoint_parts_plan, "endpoint URL-parts validation plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:

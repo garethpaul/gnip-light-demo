@@ -30,7 +30,7 @@ Current baseline:
 - API-supplied link data is parsed with `ast.literal_eval`, not `exec`.
 - Editable dependencies use HTTPS rather than unauthenticated `git://` transport.
 - GNIP credentials are read from environment variables, and
-  `GNIP_SEARCH_ENDPOINT` must parse as an HTTPS URL with a host.
+  `GNIP_SEARCH_ENDPOINT` must parse as an HTTPS URL with a host and no embedded credentials, query string, or fragment.
 - Missing GNIP credentials, invalid request-timeout configuration, slow GNIP requests, and HTTP error responses fail before result parsing.
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
