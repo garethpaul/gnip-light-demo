@@ -58,7 +58,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 ## Testing and Verification
 
-- Run `make check` for static syntax, timeframe unit coverage, and credential/dependency/request guardrails that do not require GNIP credentials.
+- Run `make lint`, `make test`, `make build`, and `make check` for static
+  syntax, timeframe unit coverage, and credential/dependency/request guardrails
+  that do not require GNIP credentials. The `lint`, `test`, and `build` targets
+  currently delegate to the static baseline.
 - `make check` also rejects generated Python bytecode artifacts so local
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
 - `make check` verifies the sample entry points keep live GNIP requests and
@@ -94,6 +97,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   URL-parts guard.
 - See `docs/plans/2026-06-09-gnip-sample-entrypoints.md` for the sample
   entrypoint guard.
+- See `docs/plans/2026-06-09-make-gate-aliases.md` for local verification
+  target guardrails.
 
 ## Contributing
 

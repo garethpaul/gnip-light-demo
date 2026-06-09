@@ -13,6 +13,7 @@ TIMEOUT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-validation.md"
 BYTECODE_PLAN = ROOT / "docs/plans/2026-06-09-python-bytecode-artifact-guard.md"
 ENDPOINT_PARTS_PLAN = ROOT / "docs/plans/2026-06-09-gnip-endpoint-url-parts.md"
 ENTRYPOINT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-sample-entrypoints.md"
+MAKE_GATES_PLAN = ROOT / "docs/plans/2026-06-09-make-gate-aliases.md"
 
 
 def fail(message):
@@ -59,12 +60,14 @@ required_files = [
     "docs/plans/2026-06-09-gnip-timeout-validation.md",
     "docs/plans/2026-06-09-python-bytecode-artifact-guard.md",
     "docs/plans/2026-06-09-gnip-sample-entrypoints.md",
+    "docs/plans/2026-06-09-make-gate-aliases.md",
 ]
 
 for required_file in required_files:
     read(required_file)
 
 requirements = read("requirements.txt")
+makefile = read("Makefile")
 api_source = read("gnip_search/gnip_search_api.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
@@ -80,6 +83,8 @@ require("git+https://github.com/DrSkippy/Simple-n-grams.git@bbfd782614b39e2d0a1b
         "Simple-n-grams dependency must keep its pinned HTTPS VCS URL")
 require("git+https://github.com/twitterdev/twitter-python-ads-sdk.git" in requirements,
         "Twitter ads SDK dependency must use HTTPS VCS URL")
+require(".PHONY: build check lint test" in makefile and "lint test build: check" in makefile,
+        "Makefile must expose lint, test, build, and check gate targets")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
 require("ast.literal_eval" in api_source, "GNIP link parsing must use ast.literal_eval")
@@ -131,7 +136,7 @@ open_index = step2_source.find("with open('bliebers.csv', 'wb')")
 require(open_index > step2_source.find("def main():") and open_index < step2_source.find('if __name__ == "__main__":'),
         "step2.py must not write the sample CSV at import time")
 
-require("make check" in readme and "GNIP_USER_NAME" in readme and "HTTPS URL with a host" in readme,
+require("make lint" in readme and "make test" in readme and "make build" in readme and "make check" in readme and "GNIP_USER_NAME" in readme and "HTTPS URL with a host" in readme,
         "README must document baseline checks and credential environment variables")
 require("no embedded credentials, query string, or fragment" in readme,
         "README must document the GNIP endpoint URL-parts guard")
@@ -139,7 +144,7 @@ require("Python bytecode artifacts" in readme,
         "README must document the bytecode artifact guard")
 require("Importing the sample scripts does not trigger live GNIP requests" in readme,
         "README must document the sample entrypoint guard")
-require("literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
+require("make lint" in vision and "make test" in vision and "make build" in vision and "literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
 require("no embedded credentials, query string, or fragment" in vision,
         "VISION must describe the GNIP endpoint URL-parts guard")
@@ -147,7 +152,7 @@ require("bytecode artifacts" in vision,
         "VISION must describe the bytecode artifact guard")
 require("entry points keep live GNIP calls and CSV writes behind main guards" in vision,
         "VISION must describe the sample entrypoint guard")
-require("literal_eval" in changes and "HTTPS" in changes,
+require("make lint" in changes and "make test" in changes and "make build" in changes and "literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
 require("embedded credentials, query strings, or fragments" in changes,
         "CHANGES must record the GNIP endpoint URL-parts guard")
@@ -167,6 +172,8 @@ require("status: completed" in endpoint_parts_plan, "endpoint URL-parts validati
 entrypoint_plan = ENTRYPOINT_PLAN.read_text() if ENTRYPOINT_PLAN.exists() else ""
 require("status: completed" in entrypoint_plan, "sample entrypoint plan must be marked completed")
 require("make check" in entrypoint_plan, "sample entrypoint plan must record make check verification")
+make_gates_plan = MAKE_GATES_PLAN.read_text() if MAKE_GATES_PLAN.exists() else ""
+require("status: completed" in make_gates_plan, "Make gate alias plan must be marked completed")
 
 python2 = shutil.which("python2")
 if python2:
