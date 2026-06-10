@@ -95,6 +95,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   derived.
 - GNIP date filters reject impossible calendar values before request payload
   dates are derived.
+- Paged searches reject blank or repeated continuation tokens and stop at a
+  hard 1,000-page ceiling before issuing another authenticated request.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
@@ -125,6 +127,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   date filter validation.
 - See `docs/plans/2026-06-09-gnip-date-value-validation.md` for GNIP date
   value validation.
+- See `docs/plans/2026-06-10-gnip-pagination-boundary.md` for paged-search cycle
+  detection and the hard page limit.
 
 ## Contributing
 

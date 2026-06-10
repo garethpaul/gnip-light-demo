@@ -43,6 +43,8 @@ Current baseline:
   imports are safe during inspection or future tests.
 - Paged GNIP output filename prefixes are normalized to a conservative filename
   character set before JSON exports are written.
+- Paged GNIP searches reject malformed or repeated continuation tokens and
+  stop at a 1,000-page ceiling.
 - GNIP request timeout exceptions fail with a clear error before result parsing.
 - GNIP date filters must match `YYYY-MM-DD HH:MM` before API request dates are
   derived.

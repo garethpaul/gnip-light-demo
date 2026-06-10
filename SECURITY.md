@@ -34,6 +34,8 @@ Helpful reports include:
   are sent to live APIs.
 - GNIP date filters should reject impossible calendar values before compact
   request payload dates are derived.
+- GNIP pagination should reject malformed or repeated continuation tokens and
+  enforce a hard page limit before issuing more authenticated requests.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found secret-like configuration names that require careful review before use; changes in those areas should receive security-focused review before merge.
 - Dependency manifests detected: requirements.txt. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.

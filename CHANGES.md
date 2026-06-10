@@ -2,6 +2,8 @@
 
 ## 2026-06-10
 
+- Bounded paged GNIP searches to 1,000 pages and rejected blank, non-string, or
+  repeated continuation tokens before another authenticated request.
 - Made the timeframe helper importable on Python 3 and run its behavior tests
   in a pinned Python 3.10/3.12/3.14 GitHub Actions matrix.
 - Kept full Python 2 syntax and unit checks additive when Python 2 is available.

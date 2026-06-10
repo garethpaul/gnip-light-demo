@@ -19,6 +19,7 @@ TIMEOUT_EXCEPTION_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-exception-ha
 DATE_FORMAT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-format-validation.md"
 DATE_VALUE_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-value-validation.md"
 CI_PLAN = ROOT / "docs/plans/2026-06-10-python3-timeframe-ci.md"
+PAGINATION_PLAN = ROOT / "docs/plans/2026-06-10-gnip-pagination-boundary.md"
 
 
 def fail(message):
@@ -55,10 +56,12 @@ required_files = [
     "step1.py",
     "step2.py",
     "gnip_search/gnip_search_api.py",
+    "gnip_search/pagination.py",
     "gnip_search/gnip_wrapper.py",
     "gnip_search/timeframe.py",
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
+    "tests/test_pagination.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -71,6 +74,7 @@ required_files = [
     "docs/plans/2026-06-09-gnip-date-format-validation.md",
     "docs/plans/2026-06-09-gnip-date-value-validation.md",
     "docs/plans/2026-06-10-python3-timeframe-ci.md",
+    "docs/plans/2026-06-10-gnip-pagination-boundary.md",
     ".github/workflows/check.yml",
 ]
 
@@ -80,6 +84,8 @@ for required_file in required_files:
 requirements = read("requirements.txt")
 makefile = read("Makefile")
 api_source = read("gnip_search/gnip_search_api.py")
+pagination_source = read("gnip_search/pagination.py")
+pagination_tests = read("tests/test_pagination.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -99,6 +105,12 @@ require(".PHONY: build check lint test" in makefile and "lint test build: check"
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
 require("ast.literal_eval" in api_source, "GNIP link parsing must use ast.literal_eval")
+require("PaginationGuard()" in api_source and "pagination_guard.accept" in api_source and "except PaginationError, e:" in api_source,
+        "GNIP paged requests must validate provider next tokens before reuse")
+require("DEFAULT_MAX_PAGES = 1000" in pagination_source and "token in self.seen_tokens" in pagination_source and "self.page_count >= self.max_pages" in pagination_source,
+        "GNIP pagination must detect token cycles and enforce the hard page ceiling")
+require("test_rejects_repeated_tokens" in pagination_tests and "test_rejects_tokens_beyond_page_limit" in pagination_tests and "test_rejects_blank_and_non_string_tokens" in pagination_tests,
+        "GNIP pagination boundary tests must cover cycles, page limits, and malformed tokens")
 require("requests.Session()" in api_source and "s.auth = (self.user, self.password)" in api_source,
         "GNIP requests must keep credentials on the requests session auth field")
 require("REQUEST_TIMEOUT" in api_source and "timeout=REQUEST_TIMEOUT" in api_source,
@@ -256,6 +268,9 @@ require("permissions:\n  contents: read" in workflow and "cancel-in-progress: tr
 ci_plan = CI_PLAN.read_text() if CI_PLAN.exists() else ""
 require("status: completed" in ci_plan and "make check" in ci_plan,
         "Python 3 timeframe CI plan must be completed and record verification")
+pagination_plan = PAGINATION_PLAN.read_text() if PAGINATION_PLAN.exists() else ""
+require("status: completed" in pagination_plan and "Mutations disabling cycle detection or the page ceiling must fail" in pagination_plan,
+        "GNIP pagination boundary plan must record completed mutation verification")
 
 env = dict(os.environ)
 env["PYTHONDONTWRITEBYTECODE"] = "1"
