@@ -64,6 +64,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   currently delegate to the static baseline.
 - `make check` also rejects generated Python bytecode artifacts so local
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
+- Dependency-free timeframe behavior tests run on Python 3 in every baseline;
+  full legacy syntax checks remain additive when Python 2 is installed.
+- GitHub Actions runs the offline baseline on Python 3.10, 3.12, and 3.14
+  without credentials or legacy VCS dependency installation.
 - `make check` verifies the sample entry points keep live GNIP requests and
   CSV writes behind `__main__` guards.
 - Paged GNIP output filename prefixes are normalized to a conservative filename

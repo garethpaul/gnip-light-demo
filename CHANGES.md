@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-10
+
+- Made the timeframe helper importable on Python 3 and run its behavior tests
+  in a pinned Python 3.10/3.12/3.14 GitHub Actions matrix.
+- Kept full Python 2 syntax and unit checks additive when Python 2 is available.
+
 ## 2026-06-09
 
 - Rejected impossible calendar values in GNIP date filters before compact API

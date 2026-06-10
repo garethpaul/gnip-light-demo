@@ -18,6 +18,7 @@ EXPORT_PREFIX_PLAN = ROOT / "docs/plans/2026-06-09-gnip-export-prefix-sanitizer.
 TIMEOUT_EXCEPTION_PLAN = ROOT / "docs/plans/2026-06-09-gnip-timeout-exception-handling.md"
 DATE_FORMAT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-format-validation.md"
 DATE_VALUE_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-value-validation.md"
+CI_PLAN = ROOT / "docs/plans/2026-06-10-python3-timeframe-ci.md"
 
 
 def fail(message):
@@ -69,6 +70,8 @@ required_files = [
     "docs/plans/2026-06-09-gnip-timeout-exception-handling.md",
     "docs/plans/2026-06-09-gnip-date-format-validation.md",
     "docs/plans/2026-06-09-gnip-date-value-validation.md",
+    "docs/plans/2026-06-10-python3-timeframe-ci.md",
+    ".github/workflows/check.yml",
 ]
 
 for required_file in required_files:
@@ -242,6 +245,24 @@ require("status: completed" in date_format_plan, "GNIP date format validation pl
 date_value_plan = DATE_VALUE_PLAN.read_text() if DATE_VALUE_PLAN.exists() else ""
 require("status: completed" in date_value_plan, "GNIP date value validation plan must be marked completed")
 
+workflow = read(".github/workflows/check.yml")
+require("permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
+        "runs-on: ubuntu-24.04" in workflow and "timeout-minutes: 10" in workflow and
+        'python-version: ["3.10", "3.12", "3.14"]' in workflow and
+        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405" in workflow and
+        "run: make check" in workflow,
+        "GitHub Actions must keep the pinned offline Python matrix contract")
+ci_plan = CI_PLAN.read_text() if CI_PLAN.exists() else ""
+require("status: completed" in ci_plan and "make check" in ci_plan,
+        "Python 3 timeframe CI plan must be completed and record verification")
+
+env = dict(os.environ)
+env["PYTHONDONTWRITEBYTECODE"] = "1"
+subprocess.check_call([sys.executable, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT), env=env)
+require(not python_artifacts(),
+        "Python 3 characterization tests must not generate bytecode artifacts")
+
 python2 = shutil.which("python2")
 if python2:
     py_files = [str(path.relative_to(ROOT)) for path in sorted(ROOT.glob("*.py"))]
@@ -253,9 +274,9 @@ if python2:
         "    compile(open(filename, 'rb').read(), filename, 'exec')\n"
     )
     subprocess.check_call([python2, "-c", syntax_check] + py_files, cwd=str(ROOT))
-    env = dict(os.environ)
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
-    subprocess.check_call([python2, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT), env=env)
+    python2_env = dict(os.environ)
+    python2_env["PYTHONDONTWRITEBYTECODE"] = "1"
+    subprocess.check_call([python2, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT), env=python2_env)
     require(not python_artifacts(),
             "baseline checks must not generate Python bytecode artifacts")
 else:

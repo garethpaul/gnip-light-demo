@@ -29,6 +29,8 @@ Current baseline:
 - `make lint`, `make test`, `make build`, and `make check` verify legacy
   Python syntax when Python 2 is available.
 - Timeframe parsing and invalid-range fallback have local unit coverage.
+- Dependency-free timeframe tests run on Python 3.10, 3.12, and 3.14 in hosted
+  CI while full Python 2 checks remain optional and additive.
 - API-supplied link data is parsed with `ast.literal_eval`, not `exec`.
 - Editable dependencies use HTTPS rather than unauthenticated `git://` transport.
 - GNIP credentials are read from environment variables, and
