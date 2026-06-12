@@ -25,6 +25,10 @@ try:
     from .links import LinkParseError, parse_link_values
 except (ImportError, ValueError):
     from links import LinkParseError, parse_link_values
+try:
+    from .response import ResponseBodyError, read_response_body
+except (ImportError, ValueError):
+    from response import ResponseBodyError, read_response_body
 
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -135,12 +139,19 @@ class GnipSearchAPI(object):
         self.file_name_prefix = self.safe_file_name_prefix(f)
 
     def req(self):
+        s = None
         try:
             s = requests.Session()
             s.headers = {'Accept-encoding': 'gzip'}
             s.auth = (self.user, self.password)
-            res = s.post(self.stream_url, data=json.dumps(self.rule_payload), timeout=REQUEST_TIMEOUT)
-            res.raise_for_status()
+            res = s.post(self.stream_url, data=json.dumps(self.rule_payload),
+                         timeout=REQUEST_TIMEOUT, stream=True)
+            try:
+                res.raise_for_status()
+            except requests.exceptions.HTTPError:
+                res.close()
+                raise
+            return read_response_body(res)
         except requests.exceptions.Timeout, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
             sys.exit()
@@ -150,7 +161,12 @@ class GnipSearchAPI(object):
         except requests.exceptions.HTTPError, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
             sys.exit()
-        return res.text
+        except ResponseBodyError, e:
+            print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
+            sys.exit()
+        finally:
+            if s is not None:
+                s.close()
 
     def parse_JSON(self):
         acs = []

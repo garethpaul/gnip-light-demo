@@ -22,6 +22,7 @@ DATE_VALUE_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-value-validation.md"
 CI_PLAN = ROOT / "docs/plans/2026-06-10-python3-timeframe-ci.md"
 PAGINATION_PLAN = ROOT / "docs/plans/2026-06-10-gnip-pagination-boundary.md"
 LINK_LITERAL_PLAN = ROOT / "docs/plans/2026-06-12-gnip-link-literal-boundary.md"
+RESPONSE_BODY_PLAN = ROOT / "docs/plans/2026-06-12-gnip-response-body-boundary.md"
 
 
 def fail(message):
@@ -60,12 +61,14 @@ required_files = [
     "gnip_search/gnip_search_api.py",
     "gnip_search/links.py",
     "gnip_search/pagination.py",
+    "gnip_search/response.py",
     "gnip_search/gnip_wrapper.py",
     "gnip_search/timeframe.py",
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
     "tests/test_pagination.py",
     "tests/test_links.py",
+    "tests/test_response.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -80,6 +83,7 @@ required_files = [
     "docs/plans/2026-06-10-python3-timeframe-ci.md",
     "docs/plans/2026-06-10-gnip-pagination-boundary.md",
     "docs/plans/2026-06-12-gnip-link-literal-boundary.md",
+    "docs/plans/2026-06-12-gnip-response-body-boundary.md",
     ".github/workflows/check.yml",
 ]
 
@@ -93,6 +97,8 @@ links_source = read("gnip_search/links.py")
 links_tests = read("tests/test_links.py")
 pagination_source = read("gnip_search/pagination.py")
 pagination_tests = read("tests/test_pagination.py")
+response_source = read("gnip_search/response.py")
+response_tests = read("tests/test_response.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -154,6 +160,25 @@ require("REQUEST_TIMEOUT = request_timeout()" in api_source,
         "GNIP request timeout constant must use the validation helper")
 require("res.raise_for_status()" in api_source,
         "GNIP requests must fail on HTTP error responses")
+require("stream=True" in api_source and "read_response_body(res)" in api_source and
+        "res.text" not in api_source,
+        "GNIP requests must stream response bodies through the bounded reader")
+require("res.close()" in api_source and "finally:" in api_source and
+        "\n                s.close()" in api_source,
+        "GNIP HTTP errors and request sessions must release network resources")
+require("MAX_RESPONSE_BYTES = 16 * 1024 * 1024" in response_source and
+        "RESPONSE_CHUNK_BYTES = 64 * 1024" in response_source and
+        "response.iter_content(chunk_size=RESPONSE_CHUNK_BYTES)" in response_source and
+        "total_bytes > MAX_RESPONSE_BYTES" in response_source and
+        "response.close()" in response_source,
+        "GNIP response bodies must remain chunked, byte-bounded, and close-guaranteed")
+for test_contract in [
+        "test_accepts_exact_limit_and_ignores_empty_chunks",
+        "test_rejects_payload_over_limit_and_closes_response",
+        "test_closes_response_when_stream_iteration_fails",
+]:
+    require(test_contract in response_tests,
+            "GNIP response body tests must include %s" % test_contract)
 require("except requests.exceptions.Timeout, e:" in api_source and
         api_source.index("requests.exceptions.Timeout") < api_source.index("requests.exceptions.ConnectionError"),
         "GNIP request timeouts must fail with a clear message before result parsing")
@@ -333,6 +358,11 @@ require("status: completed" in link_literal_plan and
         "removing resource limits" in link_literal_plan and
         "logging query/link values" in link_literal_plan,
         "GNIP link literal plan must record completed mutation verification")
+response_body_plan = RESPONSE_BODY_PLAN.read_text() if RESPONSE_BODY_PLAN.exists() else ""
+require("status: completed" in response_body_plan and
+        "16 MiB" in response_body_plan and
+        "Mutations removing `stream=True`" in response_body_plan,
+        "GNIP response body plan must record completed streamed-read mutation verification")
 
 env = dict(os.environ)
 env["PYTHONDONTWRITEBYTECODE"] = "1"

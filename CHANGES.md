@@ -2,6 +2,8 @@
 
 ## 2026-06-12
 
+- Streamed GNIP page bodies through a 16 MiB decompressed-size boundary and
+  closed responses and sessions on success and failure paths.
 - Added a dependency-free GNIP link literal parser that rejects expressions,
   mappings, scalars, empty collections, and non-string link values before
   aggregation.

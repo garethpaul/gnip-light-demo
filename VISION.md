@@ -36,6 +36,8 @@ Current baseline:
 - GNIP credentials are read from environment variables, and
   `GNIP_SEARCH_ENDPOINT` must parse as an HTTPS URL with a host and no embedded credentials, query string, or fragment.
 - Missing GNIP credentials, invalid request-timeout configuration, slow GNIP requests, and HTTP error responses fail before result parsing.
+- GNIP page responses are streamed through a 16 MiB decompressed-size ceiling
+  and release response/session resources on all exit paths.
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
   working tree.
@@ -66,6 +68,7 @@ Next priorities:
 - Add tests around query construction and timeframe handling
 - Keep GNIP date filters strict if query construction is modernized
 - Keep impossible calendar values out of live GNIP date payloads
+- Keep per-page response memory bounded alongside pagination count limits
 - Separate publishable fixtures from live API data
 
 Contribution rules:
