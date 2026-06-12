@@ -104,6 +104,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   value before aggregation.
 - Live result processing does not log query payloads or extracted link values.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
+- GNIP page bodies are streamed in 64 KiB chunks, capped at 16 MiB after
+  decompression, and closed before JSON parsing continues.
 
 ## Security and Privacy Notes
 
@@ -137,6 +139,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   detection and the hard page limit.
 - See `docs/plans/2026-06-12-gnip-link-literal-boundary.md` for safe link-value
   parsing and invalid-field handling.
+- See `docs/plans/2026-06-12-gnip-response-body-boundary.md` for streamed GNIP
+  page size and network-resource limits.
 
 ## Contributing
 

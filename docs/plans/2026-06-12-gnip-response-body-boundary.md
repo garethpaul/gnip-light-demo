@@ -1,6 +1,6 @@
 # GNIP Response Body Boundary
 
-status: planned
+status: completed
 
 ## Context
 
@@ -22,7 +22,8 @@ predictably under oversized provider output.
 
 1. Stream GNIP response bodies instead of accessing `Response.text`.
 2. Limit each decompressed page to 16 MiB using 64 KiB chunks.
-3. Close responses after successful, oversized, or failed reads.
+3. Close responses after successful, oversized, or failed reads and close the
+   per-request session on every exit path.
 4. Preserve timeout, HTTP status, pagination, and JSON error behavior.
 5. Add dependency-free Python 2/3 tests and static mutation contracts.
 
@@ -34,6 +35,8 @@ predictably under oversized provider output.
   the first chunk that crosses the limit.
 - Pass `stream=True` to `Session.post`, call `raise_for_status`, and hand the
   response to the bounded reader.
+- Close the request session in `finally` after response processing or network
+  failure handling.
 - Extend tests, baseline checks, README, SECURITY, VISION, and CHANGES.
 
 ## Verification
@@ -47,6 +50,6 @@ predictably under oversized provider output.
 - Python 2 syntax compilation and tests when available
 - `git diff --check`
 - Mutations removing `stream=True`, the byte counter, oversized rejection,
-  response closure, or bounded-reader routing must fail.
+  response closure, session closure, or bounded-reader routing must fail.
 
 No live GNIP requests or credentials are required for this change.

@@ -36,6 +36,8 @@ Helpful reports include:
   request payload dates are derived.
 - GNIP pagination should reject malformed or repeated continuation tokens and
   enforce a hard page limit before issuing more authenticated requests.
+- GNIP response pages should remain streamed, capped at 16 MiB after
+  decompression, and close responses and sessions on all exit paths.
 - Serialized GNIP link fields should be parsed only as string literals or
   string collections; expressions, mappings, scalars, and mixed values should
   be rejected without execution.
