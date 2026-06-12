@@ -18,6 +18,10 @@ except ImportError:
     # previous versions of gnacs used a different module name
     from acscsv.twacscsv import TwacsCSV
 from simple_n_grams.simple_n_grams import SimpleNGrams
+try:
+    from .pagination import PaginationError, PaginationGuard
+except (ImportError, ValueError):
+    from pagination import PaginationError, PaginationGuard
 
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -149,6 +153,7 @@ class GnipSearchAPI(object):
         acs = []
         repeat = True
         page_count = 0
+        pagination_guard = PaginationGuard()
         while repeat:
             doc = self.req()
             try:
@@ -185,7 +190,10 @@ class GnipSearchAPI(object):
                 else:
                     print >> sys.stderr, "no results returned for rule:{0}".format(str(self.rule_payload))
                 if "next" in tmp_response:
-                    self.rule_payload["next"]=tmp_response["next"]
+                    try:
+                        self.rule_payload["next"] = pagination_guard.accept(tmp_response["next"])
+                    except PaginationError, e:
+                        raise QueryError(str(e), self.rule_payload, tmp_response)
                     repeat = True
                     page_count += 1
                     print >> sys.stderr, "Fetching page {}...".format(page_count)

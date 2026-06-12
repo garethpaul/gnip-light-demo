@@ -64,6 +64,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   currently delegate to the static baseline.
 - `make check` also rejects generated Python bytecode artifacts so local
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
+- Dependency-free timeframe behavior tests run on Python 3 in every baseline;
+  full legacy syntax checks remain additive when Python 2 is installed.
+- GitHub Actions runs the offline baseline on Python 3.10, 3.12, and 3.14
+  without credentials or legacy VCS dependency installation.
 - `make check` verifies the sample entry points keep live GNIP requests and
   CSV writes behind `__main__` guards.
 - Paged GNIP output filename prefixes are normalized to a conservative filename
@@ -91,6 +95,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   derived.
 - GNIP date filters reject impossible calendar values before request payload
   dates are derived.
+- Paged searches reject blank or repeated continuation tokens and stop at a
+  hard 1,000-page ceiling before issuing another authenticated request.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
@@ -121,6 +127,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   date filter validation.
 - See `docs/plans/2026-06-09-gnip-date-value-validation.md` for GNIP date
   value validation.
+- See `docs/plans/2026-06-10-gnip-pagination-boundary.md` for paged-search cycle
+  detection and the hard page limit.
 
 ## Contributing
 

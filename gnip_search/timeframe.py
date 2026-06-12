@@ -47,5 +47,5 @@ class Timeframe:
 if __name__ == "__main__":
     # Test that Timeframe supplies the output
     time_frame = Timeframe("", "", "")
-    print time_frame.start
-    print time_frame.end
+    print(time_frame.start)
+    print(time_frame.end)
