@@ -359,10 +359,22 @@ require("status: completed" in link_literal_plan and
         "logging query/link values" in link_literal_plan,
         "GNIP link literal plan must record completed mutation verification")
 response_body_plan = RESPONSE_BODY_PLAN.read_text() if RESPONSE_BODY_PLAN.exists() else ""
-require("status: completed" in response_body_plan and
-        "16 MiB" in response_body_plan and
-        "Mutations removing `stream=True`" in response_body_plan,
-        "GNIP response body plan must record completed streamed-read mutation verification")
+response_body_statuses = re.findall(r"^status: .+$", response_body_plan, flags=re.MULTILINE)
+response_body_sections = response_body_plan.split("## Verification Completed\n", 1)
+response_body_verification = response_body_sections[1] if len(response_body_sections) == 2 else ""
+response_body_required_evidence = (
+    "All four Make gates",
+    "all 17 tests passed in both interpreter paths",
+    "push run `27393392384`",
+    "pull-request run `27393397945`",
+    "push run `27393412678`",
+    "CodeQL run `27402321656`",
+    "Mutations removing `stream=True`",
+)
+require(response_body_statuses == ["status: completed"] and
+        all(item in response_body_verification for item in response_body_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b", response_body_verification, re.IGNORECASE) is None,
+        "GNIP response body plan must record completed status and actual verification")
 
 env = dict(os.environ)
 env["PYTHONDONTWRITEBYTECODE"] = "1"
