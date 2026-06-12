@@ -2,6 +2,8 @@
 
 ## 2026-06-12
 
+- Pinned the Twitter Ads SDK VCS dependency to the reviewed upstream `master`
+  commit instead of resolving a mutable branch.
 - Streamed GNIP page bodies through a 16 MiB decompressed-size boundary and
   closed responses and sessions on success and failure paths.
 - Added a dependency-free GNIP link literal parser that rejects expressions,

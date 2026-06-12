@@ -58,6 +58,9 @@ For web services, APIs, sockets, or scraping workflows, prioritize reports invol
 Hosted baseline jobs do not install the legacy editable VCS dependencies or use
 GNIP credentials; they run dependency-free timeframe behavior and static
 security checks with read-only repository permissions.
+Both editable dependencies use immutable VCS commits over HTTPS; this prevents
+branch drift but does not authenticate package artifacts or make the legacy
+Python 2 application stack supported.
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
 

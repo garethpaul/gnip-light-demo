@@ -68,6 +68,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   full legacy syntax checks remain additive when Python 2 is installed.
 - GitHub Actions runs the offline baseline on Python 3.10, 3.12, and 3.14
   without credentials or legacy VCS dependency installation.
+- Both legacy editable VCS dependencies use HTTPS URLs pinned to immutable 40-character commits. This fixes source selection but does not establish modern runtime compatibility or artifact hash authentication.
 - `make check` verifies the sample entry points keep live GNIP requests and
   CSV writes behind `__main__` guards.
 - Paged GNIP output filename prefixes are normalized to a conservative filename
@@ -141,6 +142,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   parsing and invalid-field handling.
 - See `docs/plans/2026-06-12-gnip-response-body-boundary.md` for streamed GNIP
   page size and network-resource limits.
+- See `docs/plans/2026-06-12-vcs-dependency-pinning.md` for immutable legacy
+  dependency source selection.
 
 ## Contributing
 

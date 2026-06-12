@@ -23,6 +23,7 @@ CI_PLAN = ROOT / "docs/plans/2026-06-10-python3-timeframe-ci.md"
 PAGINATION_PLAN = ROOT / "docs/plans/2026-06-10-gnip-pagination-boundary.md"
 LINK_LITERAL_PLAN = ROOT / "docs/plans/2026-06-12-gnip-link-literal-boundary.md"
 RESPONSE_BODY_PLAN = ROOT / "docs/plans/2026-06-12-gnip-response-body-boundary.md"
+VCS_DEPENDENCY_PLAN = ROOT / "docs/plans/2026-06-12-vcs-dependency-pinning.md"
 
 
 def fail(message):
@@ -56,6 +57,7 @@ required_files = [
     "SECURITY.md",
     "VISION.md",
     "requirements.txt",
+    "docs/plans/2026-06-12-vcs-dependency-pinning.md",
     "step1.py",
     "step2.py",
     "gnip_search/gnip_search_api.py",
@@ -109,10 +111,14 @@ gitignore = read(".gitignore")
 plan = PLAN.read_text() if PLAN.exists() else ""
 
 require("git://" not in requirements, "requirements must not use unauthenticated git:// transport")
-require("git+https://github.com/DrSkippy/Simple-n-grams.git@bbfd782614b39e2d0a1bc01fc6a75cc5df235e3e" in requirements,
-        "Simple-n-grams dependency must keep its pinned HTTPS VCS URL")
-require("git+https://github.com/twitterdev/twitter-python-ads-sdk.git" in requirements,
-        "Twitter ads SDK dependency must use HTTPS VCS URL")
+expected_requirements = [
+    "-e git+https://github.com/DrSkippy/Simple-n-grams.git@bbfd782614b39e2d0a1bc01fc6a75cc5df235e3e#egg=Simple-n-grams",
+    "-e git+https://github.com/twitterdev/twitter-python-ads-sdk.git@a3dd5819341e77aa469d0b4b3399f0bcd028c80c#egg=twitter-ads",
+]
+require(requirements.splitlines() == expected_requirements,
+        "requirements must keep exactly the reviewed immutable HTTPS VCS dependencies")
+require(all(re.search(r"\.git@[0-9a-f]{40}#egg=", line) for line in expected_requirements),
+        "VCS dependencies must use full commit SHAs")
 require(".PHONY: build check lint test" in makefile and "lint test build: check" in makefile,
         "Makefile must expose lint, test, build, and check gate targets")
 
@@ -363,6 +369,17 @@ require("status: completed" in response_body_plan and
         "16 MiB" in response_body_plan and
         "Mutations removing `stream=True`" in response_body_plan,
         "GNIP response body plan must record completed streamed-read mutation verification")
+vcs_dependency_plan = VCS_DEPENDENCY_PLAN.read_text() if VCS_DEPENDENCY_PLAN.exists() else ""
+require("status: completed" in vcs_dependency_plan and
+        "upstream `master` commit" in vcs_dependency_plan and
+        "Python 2 and Python 3 offline gates passed" in vcs_dependency_plan and
+        "hostile mutations were rejected" in vcs_dependency_plan,
+        "VCS dependency pinning plan must record completed verification")
+require("immutable 40-character commits" in read("README.md") and
+        "immutable VCS commits" in read("SECURITY.md") and
+        "Pin legacy VCS dependencies" in read("VISION.md") and
+        "Pinned the Twitter Ads SDK VCS dependency" in read("CHANGES.md"),
+        "Project guidance must document immutable VCS dependency pins")
 
 env = dict(os.environ)
 env["PYTHONDONTWRITEBYTECODE"] = "1"

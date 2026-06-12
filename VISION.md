@@ -77,6 +77,7 @@ Contribution rules:
 - Do not commit tokens, account credentials, or retrieved private data.
 - Verify live calls only with local credentials.
 - Document dependency and API version changes.
+- Pin legacy VCS dependencies to reviewed full commit SHAs.
 
 ## Security And Data
 
