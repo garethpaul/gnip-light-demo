@@ -36,6 +36,13 @@ Helpful reports include:
   request payload dates are derived.
 - GNIP pagination should reject malformed or repeated continuation tokens and
   enforce a hard page limit before issuing more authenticated requests.
+- Serialized GNIP link fields should be parsed only as string literals or
+  string collections; expressions, mappings, scalars, and mixed values should
+  be rejected without execution.
+- Link literal size, collection cardinality, and individual value length should
+  remain bounded before parsing and aggregation.
+- Query payloads and extracted link values should not be written to routine
+  process logs.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found secret-like configuration names that require careful review before use; changes in those areas should receive security-focused review before merge.
 - Dependency manifests detected: requirements.txt. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.

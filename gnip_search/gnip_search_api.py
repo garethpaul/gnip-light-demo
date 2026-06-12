@@ -5,7 +5,6 @@ __author__="Scott Hendrickson, Josh Montague"
 import sys
 import requests
 import json
-import ast
 import codecs
 import datetime
 import time
@@ -22,6 +21,10 @@ try:
     from .pagination import PaginationError, PaginationGuard
 except (ImportError, ValueError):
     from pagination import PaginationError, PaginationGuard
+try:
+    from .links import LinkParseError, parse_link_values
+except (ImportError, ValueError):
+    from links import LinkParseError, parse_link_values
 
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -239,8 +242,6 @@ class GnipSearchAPI(object):
             print >>sys.stderr, self.rule_payload
             sys.exit()
 
-        print self.rule_payload
-
         self.doc = []
         self.res_cnt = 0
         self.delta_t = 1    # keeps non-'rate' use-cases from crashing
@@ -259,14 +260,13 @@ class GnipSearchAPI(object):
                 self.delta_t = (self.newest_t - self.oldest_t).total_seconds()/60.
             elif use_case.startswith("links"):
                 link_str = self.twitter_parser.procRecordToList(rec)[self.index]
-                print "+"*20
-                print link_str
                 if link_str != "GNIPEMPTYFIELD" and link_str != "None":
                     try:
-                        link_list = ast.literal_eval(link_str)
-                    except (ValueError, SyntaxError):
-                        link_list = []
-                    for l in link_list:
+                        link_values = parse_link_values(link_str)
+                    except LinkParseError:
+                        self.freq.add("InvalidLinks")
+                        continue
+                    for l in link_values:
                         self.freq.add(l)
                 else:
                     self.freq.add("NoLinks")
