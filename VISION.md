@@ -45,6 +45,12 @@ Current baseline:
   character set before JSON exports are written.
 - Paged GNIP searches reject malformed or repeated continuation tokens and
   stop at a 1,000-page ceiling.
+- GNIP link aggregation accepts only nonblank string literals and collections,
+  and records malformed serialized fields without executing them.
+- Serialized link fields, collection cardinality, and individual values remain
+  bounded before parsing and aggregation.
+- Query payloads and extracted link values are not logged during result
+  processing.
 - GNIP request timeout exceptions fail with a clear error before result parsing.
 - GNIP date filters must match `YYYY-MM-DD HH:MM` before API request dates are
   derived.

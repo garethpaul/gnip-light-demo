@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -20,6 +21,7 @@ DATE_FORMAT_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-format-validation.md"
 DATE_VALUE_PLAN = ROOT / "docs/plans/2026-06-09-gnip-date-value-validation.md"
 CI_PLAN = ROOT / "docs/plans/2026-06-10-python3-timeframe-ci.md"
 PAGINATION_PLAN = ROOT / "docs/plans/2026-06-10-gnip-pagination-boundary.md"
+LINK_LITERAL_PLAN = ROOT / "docs/plans/2026-06-12-gnip-link-literal-boundary.md"
 
 
 def fail(message):
@@ -56,12 +58,14 @@ required_files = [
     "step1.py",
     "step2.py",
     "gnip_search/gnip_search_api.py",
+    "gnip_search/links.py",
     "gnip_search/pagination.py",
     "gnip_search/gnip_wrapper.py",
     "gnip_search/timeframe.py",
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
     "tests/test_pagination.py",
+    "tests/test_links.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -75,6 +79,7 @@ required_files = [
     "docs/plans/2026-06-09-gnip-date-value-validation.md",
     "docs/plans/2026-06-10-python3-timeframe-ci.md",
     "docs/plans/2026-06-10-gnip-pagination-boundary.md",
+    "docs/plans/2026-06-12-gnip-link-literal-boundary.md",
     ".github/workflows/check.yml",
 ]
 
@@ -84,6 +89,8 @@ for required_file in required_files:
 requirements = read("requirements.txt")
 makefile = read("Makefile")
 api_source = read("gnip_search/gnip_search_api.py")
+links_source = read("gnip_search/links.py")
+links_tests = read("tests/test_links.py")
 pagination_source = read("gnip_search/pagination.py")
 pagination_tests = read("tests/test_pagination.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
@@ -104,7 +111,31 @@ require(".PHONY: build check lint test" in makefile and "lint test build: check"
         "Makefile must expose lint, test, build, and check gate targets")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
-require("ast.literal_eval" in api_source, "GNIP link parsing must use ast.literal_eval")
+require("parse_link_values(link_str)" in api_source and "except LinkParseError:" in api_source and
+        'self.freq.add("InvalidLinks")' in api_source,
+        "GNIP link aggregation must reject and count invalid serialized fields")
+require("print self.rule_payload" not in api_source and "print link_str" not in api_source,
+        "GNIP processing must not log query payloads or extracted link fields")
+require("ast.literal_eval(serialized)" in links_source and
+        "isinstance(parsed, (list, tuple, set))" in links_source and
+        "MAX_SERIALIZED_LINK_CHARS = 65536" in links_source and
+        "MAX_LINK_VALUES = 1000" in links_source and
+        "MAX_LINK_CHARS = 4096" in links_source and
+        "GNIP link values exceed the accepted boundaries" in links_source,
+        "GNIP link parsing must use literal evaluation with strict shape validation")
+require("eval(" not in links_source.replace("literal_eval(", "") and "exec(" not in links_source,
+        "GNIP link parser must not execute serialized fields")
+for test_contract in [
+        "test_accepts_string_and_collection_literals",
+        "test_rejects_code_expressions",
+        "test_rejects_malformed_or_blank_input",
+        "test_rejects_scalar_and_mapping_literals",
+        "test_rejects_empty_or_mixed_collections",
+        "test_rejects_oversized_serialized_input",
+        "test_rejects_too_many_or_oversized_link_values",
+]:
+    require(test_contract in links_tests,
+            "GNIP link parser tests must include %s" % test_contract)
 require("PaginationGuard()" in api_source and "pagination_guard.accept" in api_source and "except PaginationError, e:" in api_source,
         "GNIP paged requests must validate provider next tokens before reuse")
 require("DEFAULT_MAX_PAGES = 1000" in pagination_source and "token in self.seen_tokens" in pagination_source and "self.page_count >= self.max_pages" in pagination_source,
@@ -202,6 +233,12 @@ require("GNIP date filters" in readme and "YYYY-MM-DD HH:MM" in readme,
         "README must document strict GNIP date filter validation")
 require("impossible calendar values" in readme,
         "README must document GNIP date value validation")
+require("InvalidLinks" in readme and "without code execution" in readme,
+        "README must document safe GNIP link literal handling")
+require("64 KiB" in readme and "1,000 values" in readme,
+        "README must document GNIP link parser resource bounds")
+require("does not log query payloads or extracted link values" in readme,
+        "README must document GNIP query and link log privacy")
 require("make lint" in vision and "make test" in vision and "make build" in vision and "literal_eval" in vision and "git://" in vision and "GNIP_SEARCH_ENDPOINT" in vision,
         "VISION must describe the current safety baseline")
 require("no embedded credentials, query string, or fragment" in vision,
@@ -218,6 +255,10 @@ require("GNIP date filters" in vision and "YYYY-MM-DD HH:MM" in vision,
         "VISION must describe strict GNIP date filter validation")
 require("impossible calendar values" in vision,
         "VISION must describe GNIP date value validation")
+require("GNIP link aggregation" in vision and "without executing" in vision,
+        "VISION must describe safe GNIP link literal handling")
+require("Query payloads and extracted link values are not logged" in vision,
+        "VISION must describe GNIP query and link log privacy")
 require("make lint" in changes and "make test" in changes and "make build" in changes and "literal_eval" in changes and "HTTPS" in changes,
         "CHANGES must record parser and dependency transport hardening")
 require("embedded credentials, query strings, or fragments" in changes,
@@ -234,6 +275,10 @@ require("GNIP date filters" in changes,
         "CHANGES must record GNIP date filter validation")
 require("impossible calendar values" in changes,
         "CHANGES must record GNIP date value validation")
+require("GNIP link literal parser" in changes and "InvalidLinks" in changes,
+        "CHANGES must record GNIP link literal validation")
+require("Removed unconditional query-payload and link-value debug output" in changes,
+        "CHANGES must record GNIP query and link log privacy")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
@@ -258,12 +303,23 @@ date_value_plan = DATE_VALUE_PLAN.read_text() if DATE_VALUE_PLAN.exists() else "
 require("status: completed" in date_value_plan, "GNIP date value validation plan must be marked completed")
 
 workflow = read(".github/workflows/check.yml")
-require("permissions:\n  contents: read" in workflow and "cancel-in-progress: true" in workflow and
+workflow_lines = workflow.splitlines()
+require(workflow_lines.count("permissions:") == 1 and
+        workflow_lines.count("  contents: read") == 1 and
+        not re.search(r"^[ \t]+permissions:", workflow, re.MULTILINE) and
+        not re.search(r"^[ \t]+[^#][^:]*:[ \t]*write(?:[ \t]*#.*)?$", workflow, re.MULTILINE) and
+        "write-all" not in workflow,
+        "GitHub Actions must keep one top-level read-only permissions block")
+require(workflow.count("uses: actions/checkout@") == 1 and
+        "uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3" in workflow and
+        workflow_lines.count("          persist-credentials: false") == 1,
+        "GitHub Actions must keep one pinned, credential-free checkout step")
+require(workflow.count("uses: actions/setup-python@") == 1 and
+        "uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0" in workflow and
+        workflow_lines.count("        run: make check") == 1 and
+        "cancel-in-progress: true" in workflow and
         "runs-on: ubuntu-24.04" in workflow and "timeout-minutes: 10" in workflow and
-        'python-version: ["3.10", "3.12", "3.14"]' in workflow and
-        "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" in workflow and
-        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405" in workflow and
-        "run: make check" in workflow,
+        'python-version: ["3.10", "3.12", "3.14"]' in workflow,
         "GitHub Actions must keep the pinned offline Python matrix contract")
 ci_plan = CI_PLAN.read_text() if CI_PLAN.exists() else ""
 require("status: completed" in ci_plan and "make check" in ci_plan,
@@ -271,6 +327,12 @@ require("status: completed" in ci_plan and "make check" in ci_plan,
 pagination_plan = PAGINATION_PLAN.read_text() if PAGINATION_PLAN.exists() else ""
 require("status: completed" in pagination_plan and "Mutations disabling cycle detection or the page ceiling must fail" in pagination_plan,
         "GNIP pagination boundary plan must record completed mutation verification")
+link_literal_plan = LINK_LITERAL_PLAN.read_text() if LINK_LITERAL_PLAN.exists() else ""
+require("status: completed" in link_literal_plan and
+        "Mutations restoring direct literal iteration" in link_literal_plan and
+        "removing resource limits" in link_literal_plan and
+        "logging query/link values" in link_literal_plan,
+        "GNIP link literal plan must record completed mutation verification")
 
 env = dict(os.environ)
 env["PYTHONDONTWRITEBYTECODE"] = "1"

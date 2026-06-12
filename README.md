@@ -97,6 +97,12 @@ When the required SDK or runtime is unavailable, use static checks and source re
   dates are derived.
 - Paged searches reject blank or repeated continuation tokens and stop at a
   hard 1,000-page ceiling before issuing another authenticated request.
+- Link aggregation parses serialized values without code execution and accepts
+  only nonblank strings or string collections; malformed fields are counted as
+  `InvalidLinks` instead of aborting result processing.
+- Link fields are bounded to 64 KiB, 1,000 values, and 4,096 characters per
+  value before aggregation.
+- Live result processing does not log query payloads or extracted link values.
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 
 ## Security and Privacy Notes
@@ -129,6 +135,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   value validation.
 - See `docs/plans/2026-06-10-gnip-pagination-boundary.md` for paged-search cycle
   detection and the hard page limit.
+- See `docs/plans/2026-06-12-gnip-link-literal-boundary.md` for safe link-value
+  parsing and invalid-field handling.
 
 ## Contributing
 

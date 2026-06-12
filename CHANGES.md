@@ -1,5 +1,17 @@
 # Changes
 
+## 2026-06-12
+
+- Added a dependency-free GNIP link literal parser that rejects expressions,
+  mappings, scalars, empty collections, and non-string link values before
+  aggregation.
+- Counted malformed link fields as `InvalidLinks` and added focused Python 2/3
+  regression tests for accepted and rejected literal shapes.
+- Bounded serialized link fields, collection cardinality, and individual link
+  lengths before literal parsing and aggregation.
+- Removed unconditional query-payload and link-value debug output from live
+  result processing.
+
 ## 2026-06-10
 
 - Bounded paged GNIP searches to 1,000 pages and rejected blank, non-string, or

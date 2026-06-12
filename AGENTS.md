@@ -45,6 +45,12 @@
 - GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it; the value must be a positive integer number of seconds.
 - GNIP request timeout exceptions are handled with a clear error before result parsing.
 - GNIP date filters reject malformed delimiters before request payload dates are derived.
+- GNIP link aggregation must use `gnip_search.links.parse_link_values`; never
+  restore `exec`, `eval`, or unvalidated iteration over parsed literal shapes.
+- Preserve the link parser's serialized-size, collection-count, and per-value
+  limits when changing provider parsing.
+- Do not log query payloads, extracted link values, credentials, or retrieved
+  tweet content.
 
 ## Agent workflow
 
