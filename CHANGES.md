@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Replaced character-set trimming of GNIP geo-export timestamps with exact
+  `.000Z` suffix removal so seconds ending in zero remain intact.
 - Redacted query text and pagination tokens from query-preview and no-result
   output and kept printable query errors from exposing request or provider
   response payloads.

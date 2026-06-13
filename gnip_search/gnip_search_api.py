@@ -33,6 +33,10 @@ try:
     from .privacy import redacted_rule_payload
 except (ImportError, ValueError):
     from privacy import redacted_rule_payload
+try:
+    from .timestamps import remove_millisecond_utc_suffix
+except (ImportError, ValueError):
+    from timestamps import remove_millisecond_utc_suffix
 
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -293,7 +297,7 @@ class GnipSearchAPI(object):
                     if "coordinates" in rec["geo"]:
                         [lat,lng] = rec["geo"]["coordinates"]
                 record = { "id": rec["id"].split(":")[2]
-                        , "postedTime": rec["postedTime"].strip(".000Z")
+                        , "postedTime": remove_millisecond_utc_suffix(rec["postedTime"])
                         , "latitude": lat
                         , "longitude": lng }
                 self.doc.append(record)

@@ -61,6 +61,8 @@ For web services, APIs, sockets, or scraping workflows, prioritize reports invol
 Hosted baseline jobs do not install the legacy editable VCS dependencies or use
 GNIP credentials; they run dependency-free timeframe behavior and static
 security checks with read-only repository permissions.
+Geo export timestamps should remove only the exact GNIP `.000Z` suffix; do not
+use character-set trimming that can silently corrupt provider data.
 Both editable dependencies use immutable VCS commits over HTTPS; this prevents
 branch drift but does not authenticate package artifacts or make the legacy
 Python 2 application stack supported.

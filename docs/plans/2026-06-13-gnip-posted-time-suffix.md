@@ -1,7 +1,7 @@
 ---
 title: Exact GNIP Posted-Time Suffix Removal
 date: 2026-06-13
-status: planned
+status: completed
 execution: code
 ---
 
@@ -53,8 +53,24 @@ credentials, API calls, or changes to query construction.
 
 ## Work Completed
 
-- Pending implementation.
+- Added a dependency-free Python 2/3 helper that validates non-empty timestamp
+  strings and removes only the exact `.000Z` suffix.
+- Routed geo export posted times through the helper instead of character-set
+  stripping.
+- Added focused tests for zero-ending seconds, ordinary seconds, absent suffixes,
+  and invalid values.
+- Added source, test, documentation, mutation, and completed-plan contracts.
 
 ## Verification Completed
 
-- Pending implementation and verification.
+- All 23 tests passed on Python 3 and Python 2 in a pristine copied tree with
+  completed-plan evidence supplied in the copy.
+- Focused timestamp tests passed independently on Python 3 and Python 2.
+- All four Make gates passed before push.
+- The character-set stripping mutation failed after restoring `.strip(".000Z")`.
+- The exact suffix guard mutation failed after removing the `endswith` check.
+- The timestamp test removal mutation failed after removing the zero-ending
+  seconds test contract.
+- The hosted push, pull-request, and CodeQL snapshot is a post-push evidence
+  step; its bounded exact-head result is recorded after the implementation
+  commit.

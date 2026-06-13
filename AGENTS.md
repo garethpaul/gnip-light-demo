@@ -51,6 +51,8 @@
   limits when changing provider parsing.
 - Do not log query payloads, extracted link values, credentials, or retrieved
   tweet content.
+- Remove only the exact GNIP `.000Z` posted-time suffix in geo exports; do not
+  restore character-set `strip` handling.
 
 ## Agent workflow
 

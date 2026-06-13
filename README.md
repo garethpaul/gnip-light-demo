@@ -76,6 +76,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Query-preview and no-result output mask query text and pagination tokens, and
   printable query errors omit request and provider response payloads and
   messages.
+- Geo exports remove only the exact GNIP `.000Z` posted-time suffix so seconds
+  ending in zero are not truncated by character-set stripping.
 - GNIP request timeout exceptions exit with a clear error instead of falling
   through to result parsing or a traceback.
 - GNIP date filters must match the documented `YYYY-MM-DD HH:MM` format before

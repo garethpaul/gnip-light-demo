@@ -25,6 +25,7 @@ LINK_LITERAL_PLAN = ROOT / "docs/plans/2026-06-12-gnip-link-literal-boundary.md"
 RESPONSE_BODY_PLAN = ROOT / "docs/plans/2026-06-12-gnip-response-body-boundary.md"
 VCS_DEPENDENCY_PLAN = ROOT / "docs/plans/2026-06-12-vcs-dependency-pinning.md"
 DIAGNOSTIC_REDACTION_PLAN = ROOT / "docs/plans/2026-06-13-gnip-diagnostic-redaction.md"
+POSTED_TIME_SUFFIX_PLAN = ROOT / "docs/plans/2026-06-13-gnip-posted-time-suffix.md"
 
 
 def fail(message):
@@ -68,12 +69,14 @@ required_files = [
     "gnip_search/response.py",
     "gnip_search/gnip_wrapper.py",
     "gnip_search/timeframe.py",
+    "gnip_search/timestamps.py",
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
     "tests/test_pagination.py",
     "tests/test_privacy.py",
     "tests/test_links.py",
     "tests/test_response.py",
+    "tests/test_timestamps.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -90,6 +93,7 @@ required_files = [
     "docs/plans/2026-06-12-gnip-link-literal-boundary.md",
     "docs/plans/2026-06-12-gnip-response-body-boundary.md",
     "docs/plans/2026-06-13-gnip-diagnostic-redaction.md",
+    "docs/plans/2026-06-13-gnip-posted-time-suffix.md",
     ".github/workflows/check.yml",
 ]
 
@@ -107,6 +111,8 @@ response_source = read("gnip_search/response.py")
 response_tests = read("tests/test_response.py")
 privacy_source = read("gnip_search/privacy.py")
 privacy_tests = read("tests/test_privacy.py")
+timestamps_source = read("gnip_search/timestamps.py")
+timestamps_tests = read("tests/test_timestamps.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -129,6 +135,21 @@ require(".PHONY: build check lint test" in makefile and "lint test build: check"
         "Makefile must expose lint, test, build, and check gate targets")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
+require("remove_millisecond_utc_suffix(rec[\"postedTime\"])" in api_source and
+        '.strip(".000Z")' not in api_source and
+        "from .timestamps import remove_millisecond_utc_suffix" in api_source and
+        "from timestamps import remove_millisecond_utc_suffix" in api_source,
+        "GNIP geo exports must use exact posted-time suffix removal")
+require('MILLISECOND_UTC_SUFFIX = ".000Z"' in timestamps_source and
+        "isinstance(value, string_types)" in timestamps_source and
+        "value.endswith(MILLISECOND_UTC_SUFFIX)" in timestamps_source and
+        "value[:-len(MILLISECOND_UTC_SUFFIX)]" in timestamps_source,
+        "GNIP posted-time helper must remove only the exact millisecond UTC suffix")
+require("test_preserves_seconds_ending_in_zero" in timestamps_tests and
+        "test_removes_suffix_from_ordinary_seconds" in timestamps_tests and
+        "test_leaves_values_without_exact_suffix_unchanged" in timestamps_tests and
+        "test_rejects_non_string_or_empty_values" in timestamps_tests,
+        "GNIP posted-time tests must cover exact removal and rejected values")
 require("parse_link_values(link_str)" in api_source and "except LinkParseError:" in api_source and
         'self.freq.add("InvalidLinks")' in api_source,
         "GNIP link aggregation must reject and count invalid serialized fields")
@@ -324,6 +345,12 @@ require("GNIP link literal parser" in changes and "InvalidLinks" in changes,
         "CHANGES must record GNIP link literal validation")
 require("Removed unconditional query-payload and link-value debug output" in changes,
         "CHANGES must record GNIP query and link log privacy")
+require("exact GNIP `.000Z` posted-time suffix" in read("README.md") and
+        "exact GNIP `.000Z` suffix" in read("SECURITY.md") and
+        "exact GNIP `.000Z` suffix" in read("VISION.md") and
+        "exact GNIP `.000Z` posted-time suffix" in read("AGENTS.md") and
+        "exact" in changes and "`.000Z` suffix removal" in changes,
+        "Project guidance must document exact GNIP posted-time suffix removal")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
@@ -411,6 +438,25 @@ require(diagnostic_redaction_statuses == ["status: completed"] and
         all(item in diagnostic_redaction_verification for item in diagnostic_redaction_required_evidence) and
         re.search(r"\b(?:pending|todo|tbd|not run)\b", diagnostic_redaction_verification, re.IGNORECASE) is None,
         "GNIP diagnostic redaction plan must record completed status and actual verification")
+posted_time_suffix_plan = POSTED_TIME_SUFFIX_PLAN.read_text() if POSTED_TIME_SUFFIX_PLAN.exists() else ""
+posted_time_suffix_statuses = re.findall(
+        r"^status: .+$", posted_time_suffix_plan, flags=re.MULTILINE)
+posted_time_suffix_sections = posted_time_suffix_plan.split(
+        "## Verification Completed\n", 1)
+posted_time_suffix_verification = (
+        posted_time_suffix_sections[1] if len(posted_time_suffix_sections) == 2 else "")
+posted_time_suffix_required_evidence = (
+        "All 23 tests passed on Python 3 and Python 2",
+        "All four Make gates passed",
+        "character-set stripping mutation failed",
+        "exact suffix guard mutation failed",
+        "timestamp test removal mutation failed",
+        "hosted push, pull-request, and CodeQL snapshot",
+)
+require(posted_time_suffix_statuses == ["status: completed"] and
+        all(item in posted_time_suffix_verification for item in posted_time_suffix_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b", posted_time_suffix_verification, re.IGNORECASE) is None,
+        "GNIP posted-time suffix plan must record completed status and actual verification")
 require("immutable 40-character commits" in read("README.md") and
         "immutable VCS commits" in read("SECURITY.md") and
         "Pin legacy VCS dependencies" in read("VISION.md") and
