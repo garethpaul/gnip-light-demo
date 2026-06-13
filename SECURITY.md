@@ -45,6 +45,9 @@ Helpful reports include:
   remain bounded before parsing and aggregation.
 - Query payloads and extracted link values should not be written to routine
   process logs.
+- Query-preview and exception diagnostics must redact query text, pagination
+  tokens, request payloads, and provider response content, including provider
+  error messages.
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found secret-like configuration names that require careful review before use; changes in those areas should receive security-focused review before merge.
 - Dependency manifests detected: requirements.txt. Dependency updates should preserve lockfiles when present and avoid introducing packages without a clear maintenance reason.

@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-13
+
+- Redacted query text and pagination tokens from query-preview and no-result
+  output and kept printable query errors from exposing request or provider
+  response payloads.
+
 ## 2026-06-12
 
 - Pinned the Twitter Ads SDK VCS dependency to the reviewed upstream `master`

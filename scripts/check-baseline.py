@@ -24,6 +24,7 @@ PAGINATION_PLAN = ROOT / "docs/plans/2026-06-10-gnip-pagination-boundary.md"
 LINK_LITERAL_PLAN = ROOT / "docs/plans/2026-06-12-gnip-link-literal-boundary.md"
 RESPONSE_BODY_PLAN = ROOT / "docs/plans/2026-06-12-gnip-response-body-boundary.md"
 VCS_DEPENDENCY_PLAN = ROOT / "docs/plans/2026-06-12-vcs-dependency-pinning.md"
+DIAGNOSTIC_REDACTION_PLAN = ROOT / "docs/plans/2026-06-13-gnip-diagnostic-redaction.md"
 
 
 def fail(message):
@@ -63,12 +64,14 @@ required_files = [
     "gnip_search/gnip_search_api.py",
     "gnip_search/links.py",
     "gnip_search/pagination.py",
+    "gnip_search/privacy.py",
     "gnip_search/response.py",
     "gnip_search/gnip_wrapper.py",
     "gnip_search/timeframe.py",
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
     "tests/test_pagination.py",
+    "tests/test_privacy.py",
     "tests/test_links.py",
     "tests/test_response.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
@@ -86,6 +89,7 @@ required_files = [
     "docs/plans/2026-06-10-gnip-pagination-boundary.md",
     "docs/plans/2026-06-12-gnip-link-literal-boundary.md",
     "docs/plans/2026-06-12-gnip-response-body-boundary.md",
+    "docs/plans/2026-06-13-gnip-diagnostic-redaction.md",
     ".github/workflows/check.yml",
 ]
 
@@ -101,6 +105,8 @@ pagination_source = read("gnip_search/pagination.py")
 pagination_tests = read("tests/test_pagination.py")
 response_source = read("gnip_search/response.py")
 response_tests = read("tests/test_response.py")
+privacy_source = read("gnip_search/privacy.py")
+privacy_tests = read("tests/test_privacy.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -126,8 +132,16 @@ require("exec(" not in api_source, "GNIP API parser must not execute API-supplie
 require("parse_link_values(link_str)" in api_source and "except LinkParseError:" in api_source and
         'self.freq.add("InvalidLinks")' in api_source,
         "GNIP link aggregation must reject and count invalid serialized fields")
-require("print self.rule_payload" not in api_source and "print link_str" not in api_source,
+require("print self.rule_payload" not in api_source and "print >>sys.stderr, self.rule_payload" not in api_source and 'format(str(self.rule_payload))' not in api_source and "print link_str" not in api_source,
         "GNIP processing must not log query payloads or extracted link fields")
+require("def redacted_rule_payload(payload):" in privacy_source and 'for key in ("query", "next")' in privacy_source and "preview = dict(payload)" in privacy_source,
+        "GNIP diagnostics must redact query text and pagination tokens without mutating request payloads")
+require("json.dumps(redacted_rule_payload(self.rule_payload), sort_keys=True)" in api_source and "return repr(self.message)" in api_source and 'return repr("%s (%s, %s)"' not in api_source,
+        "GNIP preview and exception diagnostics must not expose request or response payloads")
+require('raise QueryError("GNIP query failed", self.rule_payload, tmp_response)' in api_source and 'tmp_response.get("error").get("message")' not in api_source,
+        "GNIP provider errors must use a fixed printable message instead of response content")
+require("test_redacts_query_and_pagination_token_without_mutating_input" in privacy_tests and "test_accepts_payload_without_sensitive_fields" in privacy_tests,
+        "GNIP diagnostic redaction must have dependency-free behavior coverage")
 require("ast.literal_eval(serialized)" in links_source and
         "isinstance(parsed, (list, tuple, set))" in links_source and
         "MAX_SERIALIZED_LINK_CHARS = 65536" in links_source and
@@ -375,6 +389,28 @@ require("status: completed" in vcs_dependency_plan and
         "Python 2 and Python 3 offline gates passed" in vcs_dependency_plan and
         "hostile mutations were rejected" in vcs_dependency_plan,
         "VCS dependency pinning plan must record completed verification")
+diagnostic_redaction_plan = DIAGNOSTIC_REDACTION_PLAN.read_text() if DIAGNOSTIC_REDACTION_PLAN.exists() else ""
+diagnostic_redaction_statuses = re.findall(
+        r"^status: .+$", diagnostic_redaction_plan, flags=re.MULTILINE)
+diagnostic_redaction_sections = diagnostic_redaction_plan.split(
+        "## Verification Completed\n", 1)
+diagnostic_redaction_verification = (
+        diagnostic_redaction_sections[1] if len(diagnostic_redaction_sections) == 2 else "")
+diagnostic_redaction_required_evidence = (
+        "All 19 tests passed on Python 3 and Python 2",
+        "all four Make gates passed",
+        "raw preview mutation failed",
+        "no-result payload mutation failed",
+        "exception payload mutation failed",
+        "provider error-message mutation failed",
+        "redaction helper removal mutation failed",
+        "redaction test removal mutation failed",
+        "hosted pull-request and CodeQL snapshot",
+)
+require(diagnostic_redaction_statuses == ["status: completed"] and
+        all(item in diagnostic_redaction_verification for item in diagnostic_redaction_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b", diagnostic_redaction_verification, re.IGNORECASE) is None,
+        "GNIP diagnostic redaction plan must record completed status and actual verification")
 require("immutable 40-character commits" in read("README.md") and
         "immutable VCS commits" in read("SECURITY.md") and
         "Pin legacy VCS dependencies" in read("VISION.md") and

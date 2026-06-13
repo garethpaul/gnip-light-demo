@@ -73,6 +73,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   CSV writes behind `__main__` guards.
 - Paged GNIP output filename prefixes are normalized to a conservative filename
   character set before JSON exports are written.
+- Query-preview and no-result output mask query text and pagination tokens, and
+  printable query errors omit request and provider response payloads and
+  messages.
 - GNIP request timeout exceptions exit with a clear error instead of falling
   through to result parsing or a traceback.
 - GNIP date filters must match the documented `YYYY-MM-DD HH:MM` format before

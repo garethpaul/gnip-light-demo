@@ -29,6 +29,10 @@ try:
     from .response import ResponseBodyError, read_response_body
 except (ImportError, ValueError):
     from response import ResponseBodyError, read_response_body
+try:
+    from .privacy import redacted_rule_payload
+except (ImportError, ValueError):
+    from privacy import redacted_rule_payload
 
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -180,16 +184,9 @@ class GnipSearchAPI(object):
                 if "results" in tmp_response:
                     acs.extend(tmp_response["results"])
                 if "error" in tmp_response:
-                    raise QueryError(tmp_response.get("error").get("message"), self.rule_payload, tmp_response)
-#                     print >> sys.stderr, "Error, invalid request"
-#                     print >> sys.stderr, "Query: %s"%self.rule_payload
-#                     print >> sys.stderr, "Response: %s"%doc
+                    raise QueryError("GNIP query failed", self.rule_payload, tmp_response)
             except ValueError:
                 raise QueryError("No GNIP response", None, None)
-
-#                 print >> sys.stderr, "Error, results not parsable"
-#                 print >> sys.stderr, doc
-#                 sys.exit()
 
             repeat = False
             if self.paged:
@@ -207,7 +204,7 @@ class GnipSearchAPI(object):
 #                         # if writing to file, don't keep track of all the data in memory
 #                         acs = []
                 else:
-                    print >> sys.stderr, "no results returned for rule:{0}".format(str(self.rule_payload))
+                    print >> sys.stderr, "no results returned for GNIP query"
                 if "next" in tmp_response:
                     try:
                         self.rule_payload["next"] = pagination_guard.accept(tmp_response["next"])
@@ -255,7 +252,7 @@ class GnipSearchAPI(object):
             self.rule_payload["bucket"] = count_bucket
         if query:
             print >>sys.stderr, "API query:"
-            print >>sys.stderr, self.rule_payload
+            print >>sys.stderr, json.dumps(redacted_rule_payload(self.rule_payload), sort_keys=True)
             sys.exit()
 
         self.doc = []
@@ -370,7 +367,7 @@ class QueryError(Exception):
         self.response = response
 
     def __str__(self):
-        return repr("%s (%s, %s)" % (self.message, self.payload, self.response))
+        return repr(self.message)
 
 if __name__ == "__main__":
     g = GnipSearchAPI("USER"

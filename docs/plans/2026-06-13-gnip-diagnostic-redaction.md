@@ -1,6 +1,6 @@
 # GNIP Diagnostic Redaction
 
-status: in_progress
+status: completed
 
 ## Context
 
@@ -35,3 +35,35 @@ content can reach stderr despite the existing static check.
 The change affects diagnostics only. Query execution and exception attributes
 remain intact. Rollback restores the old printable diagnostics; no API request,
 stored data, credential, or export format changes.
+
+## Work Completed
+
+- Added a dependency-free redaction helper that copies rule payloads and masks
+  query text plus pagination tokens.
+- Routed query-preview output through the redacted copy while preserving dates,
+  buckets, and other non-sensitive diagnostic fields.
+- Removed the full rule payload from paged no-result diagnostics.
+- Kept `QueryError.payload` and `QueryError.response` available to callers while
+  making the printable exception representation message-only.
+- Replaced provider-controlled error text with a fixed printable query failure
+  message while retaining the full response attribute for inspection.
+- Added Python 2/3 behavior coverage and synchronized the baseline and project
+  guidance.
+
+## Verification Completed
+
+- Focused privacy tests passed on Python 3 and Python 2.
+- The raw preview mutation failed with the query-payload logging contract.
+- The no-result payload mutation failed with the query-payload logging contract.
+- The exception payload mutation failed with the diagnostic exposure contract.
+- The provider error-message mutation failed with the fixed-message contract.
+- The redaction helper removal mutation failed with the helper contract.
+- The redaction test removal mutation failed with the behavior-coverage
+  contract.
+- All 19 tests passed on Python 3 and Python 2.
+- `scripts/check-baseline.py` and all four Make gates passed.
+- Python 2 compilation passed for the legacy runtime and tests; Python 3
+  compilation passed for the documented dual-runtime modules, tests, and
+  checker.
+- The hosted pull-request and CodeQL snapshot is recorded separately after push;
+  this plan claims only the completed pre-push verification above.

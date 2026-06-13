@@ -53,6 +53,8 @@ Current baseline:
   bounded before parsing and aggregation.
 - Query payloads and extracted link values are not logged during result
   processing.
+- Query-preview and exception diagnostics keep query, pagination-token, request,
+  and provider response content and messages out of printable output.
 - GNIP request timeout exceptions fail with a clear error before result parsing.
 - GNIP date filters must match `YYYY-MM-DD HH:MM` before API request dates are
   derived.
