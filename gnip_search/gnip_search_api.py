@@ -37,6 +37,10 @@ try:
     from .timestamps import remove_millisecond_utc_suffix
 except (ImportError, ValueError):
     from timestamps import remove_millisecond_utc_suffix
+try:
+    from .schema import response_results
+except (ImportError, ValueError):
+    from schema import response_results
 
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -185,8 +189,8 @@ class GnipSearchAPI(object):
             doc = self.req()
             try:
                 tmp_response =  json.loads(doc)
-                if "results" in tmp_response:
-                    acs.extend(tmp_response["results"])
+                results = response_results(tmp_response)
+                acs.extend(results)
                 if "error" in tmp_response:
                     raise QueryError("GNIP query failed", self.rule_payload, tmp_response)
             except ValueError:
@@ -202,7 +206,7 @@ class GnipSearchAPI(object):
                               , str(self.file_name_prefix))
                         with codecs.open(file_name, "wb","utf-8") as out:
                             print >> sys.stderr, "(writing to file ...)"
-                            for item in tmp_response["results"]:
+                            for item in results:
                                 out.write(json.dumps(item)+"\n")
 #                     else:
 #                         # if writing to file, don't keep track of all the data in memory

@@ -1,7 +1,7 @@
 ---
 title: GNIP Response Shape
 date: 2026-06-13
-status: planned
+status: completed
 execution: code
 ---
 
@@ -48,8 +48,24 @@ pagination, or valid records.
 
 ## Work Completed
 
-Pending implementation.
+- Added a dependency-free response helper that requires an object page and a
+  list `results` value, defaulting a missing key to an empty list.
+- Routed accumulation and optional file output through the validated results
+  list while preserving provider error and pagination behavior.
+- Added Python 2/3 tests plus static, documentation, and completed-plan
+  contracts.
 
 ## Verification Completed
 
-Pending implementation and verification.
+- All 27 tests passed on Python 3 and Python 2.
+- The focused four response-shape tests passed independently on both runtimes.
+- All four Make gates passed.
+- The object guard mutation failed after removing the dictionary check.
+- The results-list guard mutation failed after removing the list check.
+- The direct results iteration mutation failed after restoring
+  `tmp_response["results"]` in file output.
+- Python compilation, workflow parsing, `git diff --check`, and intended-file
+  artifact and secret scans passed.
+- The hosted push, pull-request, and code-scanning snapshot is a post-push
+  evidence step; its bounded exact-head result is recorded after the
+  implementation commit.

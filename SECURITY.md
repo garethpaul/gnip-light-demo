@@ -38,6 +38,8 @@ Helpful reports include:
   enforce a hard page limit before issuing more authenticated requests.
 - GNIP response pages should remain streamed, capped at 16 MiB after
   decompression, and close responses and sessions on all exit paths.
+- GNIP response objects and results containers should be type-checked before
+  accumulation, pagination, or file output.
 - Serialized GNIP link fields should be parsed only as string literals or
   string collections; expressions, mappings, scalars, and mixed values should
   be rejected without execution.

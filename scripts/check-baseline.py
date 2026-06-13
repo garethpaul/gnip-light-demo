@@ -26,6 +26,7 @@ RESPONSE_BODY_PLAN = ROOT / "docs/plans/2026-06-12-gnip-response-body-boundary.m
 VCS_DEPENDENCY_PLAN = ROOT / "docs/plans/2026-06-12-vcs-dependency-pinning.md"
 DIAGNOSTIC_REDACTION_PLAN = ROOT / "docs/plans/2026-06-13-gnip-diagnostic-redaction.md"
 POSTED_TIME_SUFFIX_PLAN = ROOT / "docs/plans/2026-06-13-gnip-posted-time-suffix.md"
+RESPONSE_SHAPE_PLAN = ROOT / "docs/plans/2026-06-13-gnip-response-shape.md"
 
 
 def fail(message):
@@ -70,6 +71,7 @@ required_files = [
     "gnip_search/gnip_wrapper.py",
     "gnip_search/timeframe.py",
     "gnip_search/timestamps.py",
+    "gnip_search/schema.py",
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
     "tests/test_pagination.py",
@@ -77,6 +79,7 @@ required_files = [
     "tests/test_links.py",
     "tests/test_response.py",
     "tests/test_timestamps.py",
+    "tests/test_schema.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -94,6 +97,7 @@ required_files = [
     "docs/plans/2026-06-12-gnip-response-body-boundary.md",
     "docs/plans/2026-06-13-gnip-diagnostic-redaction.md",
     "docs/plans/2026-06-13-gnip-posted-time-suffix.md",
+    "docs/plans/2026-06-13-gnip-response-shape.md",
     ".github/workflows/check.yml",
 ]
 
@@ -113,12 +117,16 @@ privacy_source = read("gnip_search/privacy.py")
 privacy_tests = read("tests/test_privacy.py")
 timestamps_source = read("gnip_search/timestamps.py")
 timestamps_tests = read("tests/test_timestamps.py")
+schema_source = read("gnip_search/schema.py")
+schema_tests = read("tests/test_schema.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
 readme = read("README.md")
 vision = read("VISION.md")
 changes = read("CHANGES.md")
+security = read("SECURITY.md")
+agents = read("AGENTS.md")
 gitignore = read(".gitignore")
 plan = PLAN.read_text() if PLAN.exists() else ""
 
@@ -135,6 +143,20 @@ require(".PHONY: build check lint test" in makefile and "lint test build: check"
         "Makefile must expose lint, test, build, and check gate targets")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
+require("def response_results(payload):" in schema_source and
+        "isinstance(payload, dict)" in schema_source and
+        "isinstance(results, list)" in schema_source,
+        "GNIP response schema must require an object with list results")
+require("from .schema import response_results" in api_source and
+        "results = response_results(tmp_response)" in api_source and
+        "acs.extend(results)" in api_source and
+        "for item in results:" in api_source and
+        'tmp_response["results"]' not in api_source,
+        "GNIP page parsing and file output must use validated results")
+require("test_rejects_non_object_pages" in schema_tests and
+        "test_rejects_non_list_results" in schema_tests and
+        "test_defaults_missing_results_to_empty_list" in schema_tests,
+        "GNIP response-shape tests must cover malformed and missing containers")
 require("remove_millisecond_utc_suffix(rec[\"postedTime\"])" in api_source and
         '.strip(".000Z")' not in api_source and
         "from .timestamps import remove_millisecond_utc_suffix" in api_source and
@@ -457,6 +479,31 @@ require(posted_time_suffix_statuses == ["status: completed"] and
         all(item in posted_time_suffix_verification for item in posted_time_suffix_required_evidence) and
         re.search(r"\b(?:pending|todo|tbd|not run)\b", posted_time_suffix_verification, re.IGNORECASE) is None,
         "GNIP posted-time suffix plan must record completed status and actual verification")
+response_shape_plan = RESPONSE_SHAPE_PLAN.read_text() if RESPONSE_SHAPE_PLAN.exists() else ""
+response_shape_statuses = re.findall(
+        r"^status: .+$", response_shape_plan, flags=re.MULTILINE)
+response_shape_sections = response_shape_plan.split(
+        "## Verification Completed\n", 1)
+response_shape_verification = (
+        response_shape_sections[1] if len(response_shape_sections) == 2 else "")
+response_shape_required_evidence = (
+        "All 27 tests passed on Python 3 and Python 2",
+        "All four Make gates passed",
+        "object guard mutation failed",
+        "results-list guard mutation failed",
+        "direct results iteration mutation failed",
+        "hosted push, pull-request, and code-scanning snapshot",
+)
+require(response_shape_statuses == ["status: completed"] and
+        all(item in response_shape_verification for item in response_shape_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b", response_shape_verification, re.IGNORECASE) is None,
+        "GNIP response-shape plan must record completed status and actual verification")
+require("GNIP response pages must decode to objects with list results" in readme and
+        "GNIP response objects and results containers should be type-checked" in security and
+        "Require GNIP response objects and list results" in vision and
+        "Validated GNIP response objects and list results" in changes and
+        "Validate GNIP response objects and list results" in agents,
+        "Project guidance must document GNIP response-shape validation")
 require("immutable 40-character commits" in read("README.md") and
         "immutable VCS commits" in read("SECURITY.md") and
         "Pin legacy VCS dependencies" in read("VISION.md") and

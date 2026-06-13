@@ -44,6 +44,7 @@
 - Whitespace-only credential values are rejected, and `GNIP_SEARCH_ENDPOINT` must parse as an HTTPS URL with a host and no embedded credentials, query string, or fragment before requests are built.
 - GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it; the value must be a positive integer number of seconds.
 - GNIP request timeout exceptions are handled with a clear error before result parsing.
+- Validate GNIP response objects and list results before downstream processing.
 - GNIP date filters reject malformed delimiters before request payload dates are derived.
 - GNIP link aggregation must use `gnip_search.links.parse_link_values`; never
   restore `exec`, `eval`, or unvalidated iteration over parsed literal shapes.

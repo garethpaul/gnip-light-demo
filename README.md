@@ -112,6 +112,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 - GNIP page bodies are streamed in 64 KiB chunks, capped at 16 MiB after
   decompression, and closed before JSON parsing continues.
+- GNIP response pages must decode to objects with list results before records
+  are accumulated, paginated, or written to files.
 
 ## Security and Privacy Notes
 

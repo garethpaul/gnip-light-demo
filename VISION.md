@@ -40,6 +40,7 @@ Current baseline:
 - Missing GNIP credentials, invalid request-timeout configuration, slow GNIP requests, and HTTP error responses fail before result parsing.
 - GNIP page responses are streamed through a 16 MiB decompressed-size ceiling
   and release response/session resources on all exit paths.
+- Require GNIP response objects and list results before downstream processing.
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
   working tree.
