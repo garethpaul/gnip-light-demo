@@ -1,7 +1,7 @@
 ---
 title: Location-Independent GNIP Verification
 date: 2026-06-13
-status: planned
+status: completed
 execution: code
 ---
 
@@ -49,8 +49,24 @@ static contract.
 
 ## Work Completed
 
-Pending implementation.
+- Derived the repository root from the loaded Makefile and invoked the existing
+  checker through its absolute repository path.
+- Extended the baseline with rooted-Makefile, completed-plan, external-run, and
+  synchronized-guidance contracts.
+- Preserved production modules, tests, dependencies, workflows, credential
+  handling, and generated-artifact policy unchanged.
 
 ## Verification Completed
 
-Pending implementation and validation. Run `make check` before completion.
+- All 27 tests passed on Python 3 and Python 2.
+- All four Make gates (`make lint`, `make test`, `make build`, and `make check`)
+  passed at repository root and from /tmp through the absolute Makefile path.
+- The root-derivation mutation failed.
+- The checker-command mutation failed.
+- The plan-status mutation failed.
+- The plan-evidence mutation failed.
+- The documentation mutation failed.
+- Workflow parsing, `git diff --check`, exact intended-path review, added-line
+  secret scanning, and bytecode/generated-artifact inspection passed.
+- Live GNIP API requests, pagination responses, retrieved payloads, and exports
+  were unavailable without credentials and are not claimed.

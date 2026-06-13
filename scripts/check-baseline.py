@@ -27,6 +27,7 @@ VCS_DEPENDENCY_PLAN = ROOT / "docs/plans/2026-06-12-vcs-dependency-pinning.md"
 DIAGNOSTIC_REDACTION_PLAN = ROOT / "docs/plans/2026-06-13-gnip-diagnostic-redaction.md"
 POSTED_TIME_SUFFIX_PLAN = ROOT / "docs/plans/2026-06-13-gnip-posted-time-suffix.md"
 RESPONSE_SHAPE_PLAN = ROOT / "docs/plans/2026-06-13-gnip-response-shape.md"
+LOCATION_INDEPENDENT_MAKE_PLAN = ROOT / "docs/plans/2026-06-13-location-independent-make.md"
 
 
 def fail(message):
@@ -139,7 +140,10 @@ require(requirements.splitlines() == expected_requirements,
         "requirements must keep exactly the reviewed immutable HTTPS VCS dependencies")
 require(all(re.search(r"\.git@[0-9a-f]{40}#egg=", line) for line in expected_requirements),
         "VCS dependencies must use full commit SHAs")
-require(".PHONY: build check lint test" in makefile and "lint test build: check" in makefile,
+require(".PHONY: build check lint test" in makefile
+        and "lint test build: check" in makefile
+        and 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' in makefile
+        and 'python3 "$(ROOT)/scripts/check-baseline.py"' in makefile,
         "Makefile must expose lint, test, build, and check gate targets")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
@@ -498,6 +502,36 @@ require(response_shape_statuses == ["status: completed"] and
         all(item in response_shape_verification for item in response_shape_required_evidence) and
         re.search(r"\b(?:pending|todo|tbd|not run)\b", response_shape_verification, re.IGNORECASE) is None,
         "GNIP response-shape plan must record completed status and actual verification")
+location_independent_make_plan = (
+        LOCATION_INDEPENDENT_MAKE_PLAN.read_text()
+        if LOCATION_INDEPENDENT_MAKE_PLAN.exists() else "")
+location_independent_make_statuses = re.findall(
+        r"^status: .+$", location_independent_make_plan, flags=re.MULTILINE)
+location_independent_make_sections = location_independent_make_plan.split(
+        "## Verification Completed\n", 1)
+location_independent_make_verification = (
+        location_independent_make_sections[1]
+        if len(location_independent_make_sections) == 2 else "")
+location_independent_make_required_evidence = (
+        "All 27 tests passed on Python 3 and Python 2",
+        "All four Make gates",
+        "from /tmp",
+        "root-derivation mutation failed",
+        "checker-command mutation failed",
+        "plan-status mutation failed",
+        "plan-evidence mutation failed",
+        "documentation mutation failed",
+)
+require(location_independent_make_statuses == ["status: completed"] and
+        all(item in location_independent_make_verification
+            for item in location_independent_make_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b",
+                  location_independent_make_verification,
+                  re.IGNORECASE) is None,
+        "Location-independent Make plan must record completed status and actual verification")
+require("absolute Makefile path" in readme and
+        "Made GNIP verification independent" in changes,
+        "Project guidance must document location-independent Make verification")
 require("GNIP response pages must decode to objects with list results" in readme and
         "GNIP response objects and results containers should be type-checked" in security and
         "Require GNIP response objects and list results" in vision and

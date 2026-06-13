@@ -64,6 +64,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   currently delegate to the static baseline.
 - `make check` also rejects generated Python bytecode artifacts so local
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
+- Use the absolute Makefile path to run the same gates from another working
+  directory. Make resolves the checker relative to the loaded Makefile rather
+  than the caller's directory.
 - Dependency-free timeframe behavior tests run on Python 3 in every baseline;
   full legacy syntax checks remain additive when Python 2 is installed.
 - GitHub Actions runs the offline baseline on Python 3.10, 3.12, and 3.14

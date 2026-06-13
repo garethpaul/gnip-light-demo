@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Made GNIP verification independent of the caller's working directory by
+  resolving the baseline checker from the loaded Makefile.
 - Validated GNIP response objects and list results before accumulation,
   pagination, and optional file output.
 - Replaced character-set trimming of GNIP geo-export timestamps with exact
