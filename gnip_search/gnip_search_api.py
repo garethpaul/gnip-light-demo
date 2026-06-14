@@ -41,6 +41,10 @@ try:
     from .schema import response_results
 except (ImportError, ValueError):
     from schema import response_results
+try:
+    from .query import build_rule_payload
+except (ImportError, ValueError):
+    from query import build_rule_payload
 
 reload(sys)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -240,17 +244,11 @@ class GnipSearchAPI(object):
         self.set_index(use_case, count_bucket)
         self.set_dates(start, end)
         self.name_munger(pt_filter)
-        if self.paged:
-            # avoid making many small requests
-            max_results = 500
-        self.rule_payload = { 'query': pt_filter }
-
-        # 30 DAY: to use 30 day search, replace the above line with the below updated rule payload
-        # self.rule_payload = {
-        #             'query': pt_filter,
-        #             'maxResults': int(max_results),
-        #             'publisher': 'twitter'
-        #            }
+        self.rule_payload = build_rule_payload(
+            pt_filter,
+            max_results=max_results,
+            paged=self.paged,
+            counts=use_case.startswith("time"))
 
         if start:
             self.rule_payload["fromDate"] = self.fromDate

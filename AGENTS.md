@@ -45,6 +45,9 @@
 - GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it; the value must be a positive integer number of seconds.
 - GNIP request timeout exceptions are handled with a clear error before result parsing.
 - Validate GNIP response objects and list results before downstream processing.
+- Build activity query payloads through `gnip_search.query.build_rule_payload`;
+  preserve positive page-size validation, the 500-result ceiling, and omission
+  of `maxResults` from count/timeline payloads.
 - GNIP date filters reject malformed delimiters before request payload dates are derived.
 - GNIP link aggregation must use `gnip_search.links.parse_link_values`; never
   restore `exec`, `eval`, or unvalidated iteration over parsed literal shapes.

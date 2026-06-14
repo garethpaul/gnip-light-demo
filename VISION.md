@@ -41,6 +41,8 @@ Current baseline:
 - GNIP page responses are streamed through a 16 MiB decompressed-size ceiling
   and release response/session resources on all exit paths.
 - Require GNIP response objects and list results before downstream processing.
+- Activity queries send a validated `maxResults` value capped at the provider's
+  500-result page boundary, while count queries omit that field.
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
   working tree.
@@ -70,7 +72,7 @@ Next priorities:
 
 - Add credential setup and sample query documentation
 - Port to supported Python and maintained Twitter/X API clients if revived
-- Add tests around query construction and timeframe handling
+- Add tests around timeframe handling and total-result pagination semantics
 - Keep GNIP date filters strict if query construction is modernized
 - Keep impossible calendar values out of live GNIP date payloads
 - Keep per-page response memory bounded alongside pagination count limits

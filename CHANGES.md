@@ -1,5 +1,9 @@
 # Changes
 
+- Restored activity-query `maxResults` payload construction with positive
+  integer validation, a 500-result per-request ceiling, and count-query
+  separation.
+
 ## 2026-06-13
 
 - Made GNIP verification independent of the caller's working directory by

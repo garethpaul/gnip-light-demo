@@ -28,6 +28,7 @@ DIAGNOSTIC_REDACTION_PLAN = ROOT / "docs/plans/2026-06-13-gnip-diagnostic-redact
 POSTED_TIME_SUFFIX_PLAN = ROOT / "docs/plans/2026-06-13-gnip-posted-time-suffix.md"
 RESPONSE_SHAPE_PLAN = ROOT / "docs/plans/2026-06-13-gnip-response-shape.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = ROOT / "docs/plans/2026-06-13-location-independent-make.md"
+MAX_RESULTS_PLAN = ROOT / "docs/plans/2026-06-14-gnip-max-results-payload.md"
 
 
 def fail(message):
@@ -73,6 +74,7 @@ required_files = [
     "gnip_search/timeframe.py",
     "gnip_search/timestamps.py",
     "gnip_search/schema.py",
+    "gnip_search/query.py",
     "gnip_search/tweets.py",
     "tests/test_timeframe.py",
     "tests/test_pagination.py",
@@ -81,6 +83,7 @@ required_files = [
     "tests/test_response.py",
     "tests/test_timestamps.py",
     "tests/test_schema.py",
+    "tests/test_query.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -99,6 +102,7 @@ required_files = [
     "docs/plans/2026-06-13-gnip-diagnostic-redaction.md",
     "docs/plans/2026-06-13-gnip-posted-time-suffix.md",
     "docs/plans/2026-06-13-gnip-response-shape.md",
+    "docs/plans/2026-06-14-gnip-max-results-payload.md",
     ".github/workflows/check.yml",
 ]
 
@@ -120,6 +124,8 @@ timestamps_source = read("gnip_search/timestamps.py")
 timestamps_tests = read("tests/test_timestamps.py")
 schema_source = read("gnip_search/schema.py")
 schema_tests = read("tests/test_schema.py")
+query_source = read("gnip_search/query.py")
+query_tests = read("tests/test_query.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -147,6 +153,22 @@ require(".PHONY: build check lint test" in makefile
         "Makefile must expose lint, test, build, and check gate targets")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
+require("def build_rule_payload(" in query_source and
+        'payload["maxResults"] = request_page_size(max_results, paged=paged)' in query_source and
+        "return min(value, MAX_RESULTS_PER_PAGE)" in query_source and
+        "if not counts:" in query_source,
+        "GNIP query payloads must validate and bound activity page sizes")
+require("from .query import build_rule_payload" in api_source and
+        "self.rule_payload = build_rule_payload(" in api_source and
+        "paged=self.paged" in api_source and
+        'counts=use_case.startswith("time")' in api_source,
+        "GNIP API requests must use the bounded query-payload helper")
+require("test_builds_activity_payload_with_requested_page_size" in query_tests and
+        "test_caps_single_requests_at_provider_page_limit" in query_tests and
+        "test_paged_searches_force_provider_page_limit" in query_tests and
+        "test_count_payload_omits_activity_page_size" in query_tests and
+        "test_rejects_invalid_page_sizes" in query_tests,
+        "GNIP query-payload tests must cover inclusion, bounds, counts, and invalid values")
 require("def response_results(payload):" in schema_source and
         "isinstance(payload, dict)" in schema_source and
         "isinstance(results, list)" in schema_source,
@@ -532,12 +554,40 @@ require(location_independent_make_statuses == ["status: completed"] and
 require("absolute Makefile path" in readme and
         "Made GNIP verification independent" in changes,
         "Project guidance must document location-independent Make verification")
+max_results_plan = MAX_RESULTS_PLAN.read_text() if MAX_RESULTS_PLAN.exists() else ""
+max_results_statuses = re.findall(
+        r"^status: .+$", max_results_plan, flags=re.MULTILINE)
+max_results_sections = max_results_plan.split("## Verification Completed\n", 1)
+max_results_verification = (
+        max_results_sections[1] if len(max_results_sections) == 2 else "")
+max_results_required_evidence = (
+        "Seven focused query-payload tests passed on Python 3 and Python 2",
+        "All 34 tests passed on Python 3 and Python 2",
+        "each of `make lint`,",
+        "The absolute Makefile path passed from `/tmp`",
+        "Six isolated mutations were rejected",
+        "generated-artifact inventory",
+        "credential-pattern scanning passed",
+)
+require(max_results_statuses == ["status: completed"] and
+        all(item in max_results_verification
+            for item in max_results_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b",
+                  max_results_verification,
+                  re.IGNORECASE) is None,
+        "GNIP max-results plan must record completed status and actual verification")
 require("GNIP response pages must decode to objects with list results" in readme and
         "GNIP response objects and results containers should be type-checked" in security and
         "Require GNIP response objects and list results" in vision and
         "Validated GNIP response objects and list results" in changes and
         "Validate GNIP response objects and list results" in agents,
         "Project guidance must document GNIP response-shape validation")
+require("validated `maxResults` page size capped at" in readme and
+        "Activity queries send a validated `maxResults`" in vision and
+        "Restored activity-query `maxResults`" in changes and
+        "Activity query page sizes are validated and capped at 500" in security and
+        "gnip_search.query.build_rule_payload" in agents,
+        "Project guidance must document bounded GNIP activity page sizes")
 require("immutable 40-character commits" in read("README.md") and
         "immutable VCS commits" in read("SECURITY.md") and
         "Pin legacy VCS dependencies" in read("VISION.md") and

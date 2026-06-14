@@ -117,6 +117,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   decompression, and closed before JSON parsing continues.
 - GNIP response pages must decode to objects with list results before records
   are accumulated, paginated, or written to files.
+- Activity query payloads include a validated `maxResults` page size capped at
+  500; count/timeline payloads omit that activity-only field.
 
 ## Security and Privacy Notes
 
@@ -154,6 +156,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   page size and network-resource limits.
 - See `docs/plans/2026-06-12-vcs-dependency-pinning.md` for immutable legacy
   dependency source selection.
+- See `docs/plans/2026-06-14-gnip-max-results-payload.md` for bounded activity
+  query page-size construction.
 
 ## Contributing
 

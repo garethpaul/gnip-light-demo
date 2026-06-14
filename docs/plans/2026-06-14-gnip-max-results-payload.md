@@ -1,6 +1,6 @@
 # GNIP Max Results Payload
 
-status: planned
+status: completed
 
 ## Context
 
@@ -26,13 +26,17 @@ the sample's larger request is silently ignored.
 - Do not implement a total-result stopping policy for `query_count`.
 - Do not issue credentialed GNIP requests or record provider data.
 
-## Verification Plan
+## Verification Completed
 
-- Run the focused query-payload tests on every available Python 3 and Python 2
-  interpreter path.
-- Run `make check` from the repository root and through the absolute Makefile
-  path from an external directory.
-- Confirm hostile mutations that omit `maxResults`, remove validation, remove
-  the 500-result cap, add the field to count requests, or bypass the helper are
-  rejected.
-- Run diff, generated-artifact, and added-line secret audits before committing.
+- Seven focused query-payload tests passed on Python 3 and Python 2.
+- All 34 tests passed on Python 3 and Python 2 through each of `make lint`,
+  `make test`, `make build`, and `make check`.
+- The absolute Makefile path passed from `/tmp`, proving location-independent
+  execution after the new files were added.
+- Six isolated mutations were rejected: omitted `maxResults`, removed page cap,
+  added the field to count requests, bypassed the helper, removed the cap test,
+  and removed project guidance.
+- `git diff --check`, exact intended-path review, generated-artifact inventory,
+  and credential-pattern scanning passed.
+- Credentialed GNIP traffic and provider response data remained outside this
+  offline change's scope.

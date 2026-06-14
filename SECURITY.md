@@ -65,6 +65,8 @@ GNIP credentials; they run dependency-free timeframe behavior and static
 security checks with read-only repository permissions.
 Geo export timestamps should remove only the exact GNIP `.000Z` suffix; do not
 use character-set trimming that can silently corrupt provider data.
+Activity query page sizes are validated and capped at 500 before request
+construction; count/timeline requests do not receive that activity-only field.
 Both editable dependencies use immutable VCS commits over HTTPS; this prevents
 branch drift but does not authenticate package artifacts or make the legacy
 Python 2 application stack supported.
