@@ -61,6 +61,8 @@ Current baseline:
 - Query-preview and exception diagnostics keep query, pagination-token, request,
   and provider response content and messages out of printable output.
 - GNIP request timeout exceptions fail with a clear error before result parsing.
+- GNIP validation and request failures exit with a nonzero status while the
+  redacted query-preview mode remains a successful no-request operation.
 - GNIP date filters must match `YYYY-MM-DD HH:MM` before API request dates are
   derived.
 - GNIP date filters reject impossible calendar values before compact API request

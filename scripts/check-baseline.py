@@ -30,6 +30,7 @@ RESPONSE_SHAPE_PLAN = ROOT / "docs/plans/2026-06-13-gnip-response-shape.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = ROOT / "docs/plans/2026-06-13-location-independent-make.md"
 MAX_RESULTS_PLAN = ROOT / "docs/plans/2026-06-14-gnip-max-results-payload.md"
 PYTHON_PREFLIGHT_PLAN = ROOT / "docs/plans/2026-06-16-python-verification-preflight.md"
+FAILURE_EXIT_STATUS_PLAN = ROOT / "docs/plans/2026-06-16-gnip-failure-exit-status.md"
 
 
 def fail(message):
@@ -86,6 +87,7 @@ required_files = [
     "tests/test_timestamps.py",
     "tests/test_schema.py",
     "tests/test_query.py",
+    "tests/test_exit_status.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -106,6 +108,7 @@ required_files = [
     "docs/plans/2026-06-13-gnip-response-shape.md",
     "docs/plans/2026-06-14-gnip-max-results-payload.md",
     "docs/plans/2026-06-16-python-verification-preflight.md",
+    "docs/plans/2026-06-16-gnip-failure-exit-status.md",
     ".github/workflows/check.yml",
 ]
 
@@ -129,6 +132,7 @@ schema_source = read("gnip_search/schema.py")
 schema_tests = read("tests/test_schema.py")
 query_source = read("gnip_search/query.py")
 query_tests = read("tests/test_query.py")
+exit_status_tests = read("tests/test_exit_status.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -221,6 +225,15 @@ require("json.dumps(redacted_rule_payload(self.rule_payload), sort_keys=True)" i
         "GNIP preview and exception diagnostics must not expose request or response payloads")
 require('raise QueryError("GNIP query failed", self.rule_payload, tmp_response)' in api_source and 'tmp_response.get("error").get("message")' not in api_source,
         "GNIP provider errors must use a fixed printable message instead of response content")
+require(api_source.count("sys.exit(1)") == 7 and api_source.count("sys.exit()") == 1,
+        "GNIP validation and request failures must exit nonzero while query preview remains successful")
+require("test_failures_exit_nonzero_and_query_preview_remains_successful" in exit_status_tests and
+        "failure_markers = (" in exit_status_tests and
+        'self.assertIn("sys.exit(1)", failure_block, marker)' in exit_status_tests and
+        'self.assertNotIn("sys.exit(1)", preview_block)' in exit_status_tests and
+        'self.assertEqual(7, source.count("sys.exit(1)"))' in exit_status_tests and
+        'self.assertEqual(1, source.count("sys.exit()"))' in exit_status_tests,
+        "GNIP exit-status behavior must have a dependency-free source contract")
 require("test_redacts_query_and_pagination_token_without_mutating_input" in privacy_tests and "test_accepts_payload_without_sensitive_fields" in privacy_tests,
         "GNIP diagnostic redaction must have dependency-free behavior coverage")
 require("ast.literal_eval(serialized)" in links_source and
@@ -639,6 +652,40 @@ require("immutable 40-character commits" in read("README.md") and
         "Pin legacy VCS dependencies" in read("VISION.md") and
         "Pinned the Twitter Ads SDK VCS dependency" in read("CHANGES.md"),
         "Project guidance must document immutable VCS dependency pins")
+require("GNIP validation and request failures exit with a nonzero status" in readme and
+        "GNIP validation and request failures exit with a nonzero status" in security and
+        "GNIP validation and request failures exit with a nonzero status" in vision and
+        "GNIP validation and request failures exit with a nonzero status" in agents and
+        "GNIP validation and request failures now exit with a nonzero status" in changes,
+        "Project guidance must document GNIP failure exit status")
+failure_exit_status_plan = (
+        FAILURE_EXIT_STATUS_PLAN.read_text()
+        if FAILURE_EXIT_STATUS_PLAN.exists() else "")
+failure_exit_status_statuses = re.findall(
+        r"^status: .+$", failure_exit_status_plan, flags=re.MULTILINE)
+failure_exit_status_sections = failure_exit_status_plan.split(
+        "## Verification Completed\n", 1)
+failure_exit_status_verification = (
+        failure_exit_status_sections[1]
+        if len(failure_exit_status_sections) == 2 else "")
+failure_exit_status_required_evidence = (
+        "focused exit-status test passed on Python 3 and Python 2",
+        "complete suite passed on Python 3 and Python 2",
+        "All four Make gates passed",
+        "external-directory Make gate passed",
+        "successful-failure-exit mutation failed",
+        "nonzero-preview-exit mutation failed",
+        "focused-test contract mutation failed",
+        "plan-status mutation failed",
+        "plan-evidence mutation failed",
+)
+require(failure_exit_status_statuses == ["status: completed"] and
+        all(item in failure_exit_status_verification
+            for item in failure_exit_status_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run|not yet)\b",
+                  failure_exit_status_verification,
+                  re.IGNORECASE) is None,
+        "GNIP failure-exit-status plan must record completed status and actual verification")
 
 env = dict(os.environ)
 env["PYTHONDONTWRITEBYTECODE"] = "1"

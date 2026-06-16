@@ -88,6 +88,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   ending in zero are not truncated by character-set stripping.
 - GNIP request timeout exceptions exit with a clear error instead of falling
   through to result parsing or a traceback.
+- GNIP validation and request failures exit with a nonzero status so automation
+  cannot mistake rejected input or failed requests for successful runs.
 - GNIP date filters must match the documented `YYYY-MM-DD HH:MM` format before
   the API-specific date strings are built.
 - GNIP date filters also reject impossible calendar values before the compact

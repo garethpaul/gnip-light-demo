@@ -1,7 +1,7 @@
 ---
 title: GNIP Failure Exit Status
 date: 2026-06-16
-status: active
+status: completed
 execution: code
 ---
 
@@ -50,8 +50,24 @@ provider credential or successor API to reproduce.
 
 ## Work Completed
 
-Pending implementation.
+- Changed the seven invalid-input and request-failure branches to `sys.exit(1)`.
+- Preserved the one bare successful exit used by redacted query-preview mode.
+- Added a Python 2/3-compatible dependency-free source contract and baseline,
+  guidance, changelog, and completed-plan enforcement.
 
 ## Verification Completed
 
-Pending implementation and validation.
+- The focused exit-status test passed on Python 3 and Python 2.
+- The complete suite passed on Python 3 and Python 2 with 35 tests per runtime.
+- All four Make gates passed in the isolated baseline mirror and final worktree.
+- The external-directory Make gate passed through the absolute Makefile path.
+- The successful-failure-exit mutation failed after restoring one bare exit in
+  an error branch.
+- The nonzero-preview-exit mutation failed after making the intentional preview
+  path exit with status 1.
+- The focused-test contract mutation failed after renaming the behavior test.
+- The plan-status mutation failed after restoring an active status.
+- The plan-evidence mutation failed after removing the failure-exit mutation
+  result.
+- Python 2 production syntax, diff, generated-artifact, credential,
+  conflict-marker, file-mode, and exact-upstream audits completed before commit.

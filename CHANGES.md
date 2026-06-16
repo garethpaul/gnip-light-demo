@@ -2,6 +2,8 @@
 
 ## 2026-06-16
 
+- GNIP validation and request failures now exit with a nonzero status while the
+  redacted query-preview mode retains its successful exit.
 - Offline verification uses one explicit, fail-fast Python 3 command while the
   live client remains Python 2.7. The Make gates now support a compatible
   `PYTHON` override and reject missing or non-Python-3 commands before running

@@ -75,12 +75,12 @@ def api_date_filter(value, label):
     dt = DATE_RE.match(value)
     if not dt:
         print >> sys.stderr, "Error. Invalid %s-date format: %s \n"%(label, str(value))
-        sys.exit()
+        sys.exit(1)
     try:
         datetime.datetime.strptime(value, INPUT_DATE_FMT)
     except ValueError:
         print >> sys.stderr, "Error. Invalid %s-date value: %s \n"%(label, str(value))
-        sys.exit()
+        sys.exit(1)
     return ''.join(dt.groups())
 
 #############################################
@@ -135,7 +135,7 @@ class GnipSearchAPI(object):
                 self.stream_url = self.stream_url[:-5] + "/counts.json"
             if count_bucket not in ['day', 'minute', 'hour']:
                 print >> sys.stderr, "Error. Invalid count bucket: %s \n"%str(count_bucket)
-                sys.exit()
+                sys.exit(1)
 
     def set_dates(self, start, end):
         # re for the acceptable datetime formats
@@ -170,16 +170,16 @@ class GnipSearchAPI(object):
             return read_response_body(res)
         except requests.exceptions.Timeout, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
-            sys.exit()
+            sys.exit(1)
         except requests.exceptions.ConnectionError, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
-            sys.exit()
+            sys.exit(1)
         except requests.exceptions.HTTPError, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
-            sys.exit()
+            sys.exit(1)
         except ResponseBodyError, e:
             print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
-            sys.exit()
+            sys.exit(1)
         finally:
             if s is not None:
                 s.close()

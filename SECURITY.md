@@ -30,6 +30,8 @@ Helpful reports include:
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - GNIP request timeout exceptions should remain explicit so slow upstream calls
   do not produce noisy tracebacks or continue into result parsing.
+- GNIP validation and request failures exit with a nonzero status; only the
+  redacted query-preview path intentionally exits successfully without a request.
 - GNIP date filters should reject malformed delimiters before request payloads
   are sent to live APIs.
 - GNIP date filters should reject impossible calendar values before compact
