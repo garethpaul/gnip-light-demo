@@ -29,6 +29,7 @@ POSTED_TIME_SUFFIX_PLAN = ROOT / "docs/plans/2026-06-13-gnip-posted-time-suffix.
 RESPONSE_SHAPE_PLAN = ROOT / "docs/plans/2026-06-13-gnip-response-shape.md"
 LOCATION_INDEPENDENT_MAKE_PLAN = ROOT / "docs/plans/2026-06-13-location-independent-make.md"
 MAX_RESULTS_PLAN = ROOT / "docs/plans/2026-06-14-gnip-max-results-payload.md"
+PYTHON_PREFLIGHT_PLAN = ROOT / "docs/plans/2026-06-16-python-verification-preflight.md"
 
 
 def fail(message):
@@ -62,6 +63,7 @@ required_files = [
     "SECURITY.md",
     "VISION.md",
     "requirements.txt",
+    "scripts/check-python3.sh",
     "docs/plans/2026-06-12-vcs-dependency-pinning.md",
     "step1.py",
     "step2.py",
@@ -103,6 +105,7 @@ required_files = [
     "docs/plans/2026-06-13-gnip-posted-time-suffix.md",
     "docs/plans/2026-06-13-gnip-response-shape.md",
     "docs/plans/2026-06-14-gnip-max-results-payload.md",
+    "docs/plans/2026-06-16-python-verification-preflight.md",
     ".github/workflows/check.yml",
 ]
 
@@ -134,6 +137,7 @@ vision = read("VISION.md")
 changes = read("CHANGES.md")
 security = read("SECURITY.md")
 agents = read("AGENTS.md")
+python_preflight = read("scripts/check-python3.sh")
 gitignore = read(".gitignore")
 plan = PLAN.read_text() if PLAN.exists() else ""
 
@@ -149,8 +153,16 @@ require(all(re.search(r"\.git@[0-9a-f]{40}#egg=", line) for line in expected_req
 require(".PHONY: build check lint test" in makefile
         and "lint test build: check" in makefile
         and 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' in makefile
-        and 'python3 "$(ROOT)/scripts/check-baseline.py"' in makefile,
-        "Makefile must expose lint, test, build, and check gate targets")
+        and "PYTHON ?= python3" in makefile
+        and 'PYTHON="$(PYTHON)" "$(ROOT)/scripts/check-python3.sh"' in makefile
+        and '"$(PYTHON)" "$(ROOT)/scripts/check-baseline.py"' in makefile,
+        "Makefile must expose configurable, preflighted gate targets")
+require('PYTHON=${PYTHON:-python3}' in python_preflight
+        and 'command -v "$PYTHON"' in python_preflight
+        and 'sys.version_info[0]' in python_preflight
+        and 'Python command not found' in python_preflight
+        and 'Python 3 is required' in python_preflight,
+        "Python preflight must reject missing and non-Python-3 commands")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
 require("def build_rule_payload(" in query_source and
@@ -588,6 +600,40 @@ require("validated `maxResults` page size capped at" in readme and
         "Activity query page sizes are validated and capped at 500" in security and
         "gnip_search.query.build_rule_payload" in agents,
         "Project guidance must document bounded GNIP activity page sizes")
+python_preflight_guidance = (
+    "Offline verification uses one explicit, fail-fast Python 3 command while "
+    "the live client remains Python 2.7."
+)
+require(all(python_preflight_guidance in re.sub(r"\s+", " ", text)
+            for text in (readme, agents, vision, changes)),
+        "Project guidance must document the offline Python preflight boundary")
+python_preflight_plan = (
+        PYTHON_PREFLIGHT_PLAN.read_text() if PYTHON_PREFLIGHT_PLAN.exists() else "")
+python_preflight_statuses = re.findall(
+        r"^status: .+$", python_preflight_plan, flags=re.MULTILINE)
+python_preflight_sections = python_preflight_plan.split(
+        "## Verification Completed\n", 1)
+python_preflight_verification = (
+        python_preflight_sections[1]
+        if len(python_preflight_sections) == 2 else "")
+python_preflight_required_evidence = (
+        "All 34 tests passed",
+        "All four Make gates passed",
+        "absolute Makefile path passed from `/tmp`",
+        "explicit Python override passed",
+        "missing-command case failed with the intended diagnostic",
+        "non-Python-3 case failed with the intended diagnostic",
+        "Nine isolated mutations were rejected",
+        "generated-artifact inventory was empty",
+        "credential-pattern scan passed",
+)
+require(python_preflight_statuses == ["status: completed"] and
+        all(item in python_preflight_verification
+            for item in python_preflight_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b",
+                  python_preflight_verification,
+                  re.IGNORECASE) is None,
+        "Python verification preflight plan must record completed status and actual verification")
 require("immutable 40-character commits" in read("README.md") and
         "immutable VCS commits" in read("SECURITY.md") and
         "Pin legacy VCS dependencies" in read("VISION.md") and
@@ -596,7 +642,12 @@ require("immutable 40-character commits" in read("README.md") and
 
 env = dict(os.environ)
 env["PYTHONDONTWRITEBYTECODE"] = "1"
-subprocess.check_call([sys.executable, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT), env=env)
+python3_test_command = [
+    sys.executable, "-m", "unittest", "discover", "-s", "tests"
+]
+require(python3_test_command[0] == sys.executable,
+        "Python 3 tests must run through the selected checker interpreter")
+subprocess.check_call(python3_test_command, cwd=str(ROOT), env=env)
 require(not python_artifacts(),
         "Python 3 characterization tests must not generate bytecode artifacts")
 

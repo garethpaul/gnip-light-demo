@@ -67,6 +67,8 @@ Current baseline:
   dates are derived.
 - Local verification targets stay available while the legacy Python 2 runtime
   remains static-check only.
+- Offline verification uses one explicit, fail-fast Python 3 command while the
+  live client remains Python 2.7.
 
 Next priorities:
 

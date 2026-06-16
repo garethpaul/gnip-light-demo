@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-16
+
+- Offline verification uses one explicit, fail-fast Python 3 command while the
+  live client remains Python 2.7. The Make gates now support a compatible
+  `PYTHON` override and reject missing or non-Python-3 commands before running
+  the checker.
+
 - Restored activity-query `maxResults` payload construction with positive
   integer validation, a 500-result per-request ceiling, and count-query
   separation.

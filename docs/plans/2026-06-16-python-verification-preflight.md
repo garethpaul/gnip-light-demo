@@ -1,6 +1,6 @@
 # Python Verification Preflight
 
-## Status: In Progress
+status: completed
 
 ## Context
 
@@ -63,3 +63,20 @@ fully verifiable without credentials or a live request.
 No GNIP/Twitter credential, live request, pagination response, CSV export,
 retrieved payload, browser route, or production integration is executed or
 claimed. Python 2.7 live-client compatibility remains unchanged.
+
+## Verification Completed
+
+- All 34 tests passed through the selected Python 3.12.8 checker interpreter
+  and through the additive Python 2.7.18 compatibility run.
+- All four Make gates passed: `make check`, `make lint`, `make test`, and
+  `make build`.
+- The absolute Makefile path passed from `/tmp`.
+- An explicit Python override passed and retained checker-owned unit discovery.
+- The missing-command case failed with the intended diagnostic.
+- The non-Python-3 case failed with the intended diagnostic.
+- Nine isolated mutations were rejected across Make defaults and propagation,
+  checker selection, command lookup, major-version enforcement, diagnostics,
+  documentation, plan status, and checker-owned unit discovery.
+- The generated-artifact inventory was empty.
+- The credential-pattern scan passed.
+- `sh -n` and direct Python source compilation passed before the full gates.

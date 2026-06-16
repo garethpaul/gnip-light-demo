@@ -33,6 +33,7 @@ Additional scan context:
 ### Prerequisites
 
 - Git
+- GNU Make and a POSIX shell
 - Python matching the era of the project
 - Python 3 for static verification
 
@@ -62,6 +63,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   syntax, timeframe unit coverage, and credential/dependency/request guardrails
   that do not require GNIP credentials. The `lint`, `test`, and `build` targets
   currently delegate to the static baseline.
+- Offline verification uses one explicit, fail-fast Python 3 command while the
+  live client remains Python 2.7. The command defaults to `python3`; set
+  `PYTHON=/path/to/python3` on the Make invocation to use another compatible
+  interpreter for both the checker and its 34 tests.
 - `make check` also rejects generated Python bytecode artifacts so local
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
 - Use the absolute Makefile path to run the same gates from another working

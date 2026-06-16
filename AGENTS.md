@@ -65,3 +65,7 @@
 3. Run the narrowest useful validation first, then `make check` or the documented package/platform gate when available.
 4. If a required SDK, service credential, or external runtime is unavailable, record the skipped command and why.
 5. Summarize changed files, commands run, and remaining risks or follow-up validation.
+
+Offline verification uses one explicit, fail-fast Python 3 command while the
+live client remains Python 2.7. Override `PYTHON` only with a compatible Python
+3 command so the checker and its unit discovery use the same interpreter.
