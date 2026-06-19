@@ -1,7 +1,57 @@
 # Changes
 
+## 2026-06-19
+
+- Offline verification uses one explicit, fail-fast Python 3 command. No
+  supported or reproducible Python 2 live environment is claimed.
+- Deep-reviewed PRs #5-#13 and reconciled the separate hosted-evidence root
+  with the maintained linear stack.
+- Made the primary request and wrapper modules importable on Python 3 while
+  preserving Python 2.7-compatible syntax.
+- Documented that the two VCS pins do not form a complete lockfile: direct
+  `Gnacs`/`requests` dependencies are absent and SDK transitive/build
+  dependencies remain floating.
+- Added fixed redacted transport diagnostics, cleanup-error precedence,
+  non-byte response rejection, controlled malformed/deep-JSON failures, and
+  object-only result validation.
+- Removed the library module's legacy executable demo that printed live query
+  results; explicit sample entry points remain in `step1.py` and `step2.py`.
+- Bounded provider queries to 2,048 characters and continuation tokens to 4
+  KiB, rejecting blank/control-bearing values before filename or network use.
+- Validated and normalized GNIP UTC posted times instead of accepting malformed
+  calendars or non-UTC offsets.
+- Removed duplicate sample API fetches and made CSV replacement atomic so
+  failed retrieval or rendering cannot truncate existing output.
+
+## 2026-06-16
+
+- GNIP validation and request failures now exit with a nonzero status while the
+  redacted query-preview mode retains its successful exit.
+- Offline verification uses one explicit, fail-fast Python 3 command while the
+  live client remains Python 2.7. The Make gates now support a compatible
+  `PYTHON` override and reject missing or non-Python-3 commands before running
+  the checker.
+
+- Restored activity-query `maxResults` payload construction with positive
+  integer validation, a 500-result per-request ceiling, and count-query
+  separation.
+
+## 2026-06-13
+
+- Made GNIP verification independent of the caller's working directory by
+  resolving the baseline checker from the loaded Makefile.
+- Validated GNIP response objects and list results before accumulation,
+  pagination, and optional file output.
+- Replaced character-set trimming of GNIP geo-export timestamps with exact
+  `.000Z` suffix removal so seconds ending in zero remain intact.
+- Redacted query text and pagination tokens from query-preview and no-result
+  output and kept printable query errors from exposing request or provider
+  response payloads.
+
 ## 2026-06-12
 
+- Pinned the Twitter Ads SDK VCS dependency to the reviewed upstream `master`
+  commit instead of resolving a mutable branch.
 - Streamed GNIP page bodies through a 16 MiB decompressed-size boundary and
   closed responses and sessions on success and failure paths.
 - Added a dependency-free GNIP link literal parser that rejects expressions,

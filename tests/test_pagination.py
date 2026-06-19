@@ -1,6 +1,6 @@
 import unittest
 
-from gnip_search.pagination import PaginationError, PaginationGuard
+from gnip_search.pagination import MAX_TOKEN_BYTES, PaginationError, PaginationGuard
 
 
 class PaginationGuardTest(unittest.TestCase):
@@ -13,6 +13,11 @@ class PaginationGuardTest(unittest.TestCase):
 
     def test_rejects_blank_and_non_string_tokens(self):
         for token in (None, "", "   ", 123):
+            with self.assertRaises(PaginationError):
+                PaginationGuard().accept(token)
+
+    def test_rejects_oversized_or_control_bearing_tokens(self):
+        for token in ("x" * (MAX_TOKEN_BYTES + 1), "page\n2", "page\x002"):
             with self.assertRaises(PaginationError):
                 PaginationGuard().accept(token)
 

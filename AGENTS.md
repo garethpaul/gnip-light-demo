@@ -44,6 +44,14 @@
 - Whitespace-only credential values are rejected, and `GNIP_SEARCH_ENDPOINT` must parse as an HTTPS URL with a host and no embedded credentials, query string, or fragment before requests are built.
 - GNIP live requests use an explicit timeout. Override it with `GNIP_REQUEST_TIMEOUT` when a slower live API path requires it; the value must be a positive integer number of seconds.
 - GNIP request timeout exceptions are handled with a clear error before result parsing.
+- GNIP validation and request failures exit with a nonzero status; preserve the
+  successful exit used only by the redacted query-preview mode.
+- Validate GNIP response objects and list results before downstream processing.
+- Build activity query payloads through `gnip_search.query.build_rule_payload`;
+  preserve positive page-size validation, the 500-result ceiling, and omission
+  of `maxResults` from count/timeline payloads.
+- Keep queries within 2,048 characters and continuation tokens within 4 KiB;
+  reject blank or control-bearing values before network use.
 - GNIP date filters reject malformed delimiters before request payload dates are derived.
 - GNIP link aggregation must use `gnip_search.links.parse_link_values`; never
   restore `exec`, `eval`, or unvalidated iteration over parsed literal shapes.
@@ -51,6 +59,12 @@
   limits when changing provider parsing.
 - Do not log query payloads, extracted link values, credentials, or retrieved
   tweet content.
+- Validate GNIP posted times as ISO-8601 UTC calendar values; reject offsets and
+  malformed dates before normalizing supported fractions.
+- Keep transport diagnostics fixed and secret-free. Never include raw provider
+  exception text, credentials, endpoint paths, queries, tokens, or responses.
+- Fetch sample data once before output and replace completed CSV files
+  atomically; do not restore eager or duplicate live requests.
 
 ## Agent workflow
 
@@ -59,3 +73,8 @@
 3. Run the narrowest useful validation first, then `make check` or the documented package/platform gate when available.
 4. If a required SDK, service credential, or external runtime is unavailable, record the skipped command and why.
 5. Summarize changed files, commands run, and remaining risks or follow-up validation.
+
+Offline verification uses one explicit, fail-fast Python 3 command. The
+historical client retains Python 2.7-compatible syntax, but no supported live
+Python 2 environment is claimed. Override `PYTHON` only with a compatible
+Python 3 command so the checker and its unit discovery use the same interpreter.

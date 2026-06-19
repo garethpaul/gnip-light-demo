@@ -1,9 +1,17 @@
-from gnip_search_api import GnipSearchAPI
-from gnip_search_api import QueryError as GNIPQueryError
-from timeframe import Timeframe
+from __future__ import print_function
+
+try:
+    from .gnip_search_api import GnipSearchAPI
+    from .timeframe import Timeframe
+except (ImportError, ValueError):
+    from gnip_search_api import GnipSearchAPI
+    from timeframe import Timeframe
 import datetime
 import os
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    from urllib import parse as urlparse
 
 
 class GNIPConfigurationError(Exception):
@@ -66,23 +74,17 @@ class GNIP:
         """
         Returns a timeline of tweets e.g. Date > Tweet Count etc.
         """
-        timeline = None
-        try:
-            timeline = self.api().query_api(
-                pt_filter=str(
-                    self.query),
-                max_results=0,
-                use_case="timeline",
-                start=self.timeframe.start.strftime(
-                    self.DATE_FORMAT),
-                end=self.timeframe.end.strftime(
-                    self.DATE_FORMAT),
-                count_bucket=self.timeframe.interval,
-                csv_flag=False)
-        except GNIPQueryError as e:
-            print e
-
-        return timeline
+        return self.api_request.query_api(
+            pt_filter=str(
+                self.query),
+            max_results=0,
+            use_case="timeline",
+            start=self.timeframe.start.strftime(
+                self.DATE_FORMAT),
+            end=self.timeframe.end.strftime(
+                self.DATE_FORMAT),
+            count_bucket=self.timeframe.interval,
+            csv_flag=False)
 
     def get_tweets(self):
         """
@@ -97,17 +99,11 @@ class GNIP:
         if (not_rt not in query_nrt):
             query_nrt = query_nrt.replace("is:retweet", "")
             query_nrt = "%s %s" % (query_nrt, not_rt)
-        tweets = None
-        try:
-            tweets = self.api().query_api(
-                query_nrt,
-                self.query_count,
-                use_case="tweets",
-                start=self.timeframe.start.strftime(
-                    self.DATE_FORMAT),
-                end=self.timeframe.end.strftime(
-                    self.DATE_FORMAT))
-        except GNIPQueryError as e:
-            print e
-            return None
-        return tweets
+        return self.api_request.query_api(
+            query_nrt,
+            self.query_count,
+            use_case="tweets",
+            start=self.timeframe.start.strftime(
+                self.DATE_FORMAT),
+            end=self.timeframe.end.strftime(
+                self.DATE_FORMAT))

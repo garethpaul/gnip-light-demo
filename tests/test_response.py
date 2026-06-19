@@ -9,9 +9,10 @@ from gnip_search.response import (
 
 
 class FakeResponse(object):
-    def __init__(self, chunks=None, error=None):
+    def __init__(self, chunks=None, error=None, close_error=None):
         self.chunks = chunks or []
         self.error = error
+        self.close_error = close_error
         self.closed = False
         self.chunk_sizes = []
 
@@ -24,6 +25,8 @@ class FakeResponse(object):
 
     def close(self):
         self.closed = True
+        if self.close_error:
+            raise self.close_error
 
 
 class ResponseBodyTest(unittest.TestCase):
@@ -51,6 +54,28 @@ class ResponseBodyTest(unittest.TestCase):
         response = FakeResponse([b"partial"], IOError("stream failed"))
 
         with self.assertRaises(IOError):
+            read_response_body(response)
+
+        self.assertTrue(response.closed)
+
+    def test_close_failure_does_not_mask_stream_failure(self):
+        response = FakeResponse(
+            [b"partial"],
+            IOError("stream failed"),
+            IOError("close failed"),
+        )
+
+        with self.assertRaises(IOError) as raised:
+            read_response_body(response)
+
+        self.assertIn("stream failed", str(raised.exception))
+
+        self.assertTrue(response.closed)
+
+    def test_rejects_non_byte_response_chunks(self):
+        response = FakeResponse(["provider-text"])
+
+        with self.assertRaises(ResponseBodyError):
             read_response_body(response)
 
         self.assertTrue(response.closed)

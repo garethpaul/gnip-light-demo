@@ -29,6 +29,8 @@ Current baseline:
 - `make lint`, `make test`, `make build`, and `make check` verify legacy
   Python syntax when Python 2 is available.
 - Timeframe parsing and invalid-range fallback have local unit coverage.
+- Geo exports validate ISO-8601 UTC posted times and reject invalid calendars
+  or non-UTC offsets before normalization.
 - Dependency-free timeframe tests run on Python 3.10, 3.12, and 3.14 in hosted
   CI while full Python 2 checks remain optional and additive.
 - API-supplied link data is parsed with `ast.literal_eval`, not `exec`.
@@ -38,6 +40,15 @@ Current baseline:
 - Missing GNIP credentials, invalid request-timeout configuration, slow GNIP requests, and HTTP error responses fail before result parsing.
 - GNIP page responses are streamed through a 16 MiB decompressed-size ceiling
   and release response/session resources on all exit paths.
+- Require GNIP response objects and list results before downstream processing.
+- Activity queries send a validated `maxResults` value capped at the provider's
+  500-result page boundary, while count queries omit that field.
+- Queries remain within the provider's documented 2,048-character limit, and
+  continuation tokens remain bounded and control-free.
+- Provider JSON and result-item shapes fail closed before downstream handling.
+- Fixed transport diagnostics and redacted exceptions keep credentials,
+  endpoints, queries, tokens, and provider payloads out of errors.
+- Sample retrieval is single-fetch and CSV replacement is atomic.
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
   working tree.
@@ -53,19 +64,32 @@ Current baseline:
   bounded before parsing and aggregation.
 - Query payloads and extracted link values are not logged during result
   processing.
+- Query-preview and exception diagnostics keep query, pagination-token, request,
+  and provider response content and messages out of printable output.
 - GNIP request timeout exceptions fail with a clear error before result parsing.
+- GNIP validation and request failures exit with a nonzero status while the
+  redacted query-preview mode remains a successful no-request operation.
 - GNIP date filters must match `YYYY-MM-DD HH:MM` before API request dates are
   derived.
 - GNIP date filters reject impossible calendar values before compact API request
   dates are derived.
 - Local verification targets stay available while the legacy Python 2 runtime
   remains static-check only.
+- Offline verification uses one explicit, fail-fast Python 3 command. The
+  historical client retains Python 2.7-compatible syntax, but no supported or
+  reproducible Python 2 live environment is claimed.
+- The primary API and wrapper path imports and runs under Python 3, while live
+  legacy VCS dependencies and managed GNIP/X enterprise access remain explicit
+  deployment risks.
+- The current manifest is historical provenance rather than a lockfile: it
+  omits direct `Gnacs` and `requests` pins and leaves SDK transitive/build
+  dependencies floating.
 
 Next priorities:
 
 - Add credential setup and sample query documentation
 - Port to supported Python and maintained Twitter/X API clients if revived
-- Add tests around query construction and timeframe handling
+- Add tests around timeframe handling and total-result pagination semantics
 - Keep GNIP date filters strict if query construction is modernized
 - Keep impossible calendar values out of live GNIP date payloads
 - Keep per-page response memory bounded alongside pagination count limits
@@ -77,6 +101,7 @@ Contribution rules:
 - Do not commit tokens, account credentials, or retrieved private data.
 - Verify live calls only with local credentials.
 - Document dependency and API version changes.
+- Pin legacy VCS dependencies to reviewed full commit SHAs.
 
 ## Security And Data
 
