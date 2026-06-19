@@ -53,3 +53,25 @@ predictably under oversized provider output.
   response closure, session closure, or bounded-reader routing must fail.
 
 No live GNIP requests or credentials are required for this change.
+
+## Work Completed
+
+- Added a streamed 16 MiB decompressed response limit using 64 KiB chunks,
+  ignored empty keep-alive chunks, and rejected the first chunk crossing the
+  boundary.
+- Preserved timeout, HTTP status, pagination, and JSON error handling while
+  guaranteeing response and per-request session cleanup on every exit path.
+- Added dependency-free Python 2/3 tests and static contracts for streamed
+  routing, byte accounting, oversize rejection, and cleanup.
+
+## Verification Completed
+
+- All four Make gates and `git diff --check` passed locally under Python 3.12
+  and Python 2.7; all 17 tests passed in both interpreter paths.
+- Implementation push run `27393392384` and pull-request run `27393397945`
+  passed at commit `c817b080580cbcb3df4d5bcf27e8caa55ae48cce` across Python
+  3.10, 3.12, and 3.14.
+- Post-merge push run `27393412678` and CodeQL run `27402321656` passed at
+  default-branch merge commit `27c94967ea278f0c1276edbda6238acfad241b88`.
+- Mutations removing `stream=True`, byte accounting, oversized rejection,
+  response closure, session closure, or bounded-reader routing were rejected.

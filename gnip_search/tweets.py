@@ -1,4 +1,10 @@
-from gnip_wrapper import GNIP
+try:
+    from .gnip_wrapper import GNIP
+except (ImportError, ValueError):
+    from gnip_wrapper import GNIP
+
+
+_NOT_LOADED = object()
 
 
 class FullArchiveSearch:
@@ -9,13 +15,15 @@ class FullArchiveSearch:
     def __init__(self, query, query_count):
         self.query = query
         self.query_count = query_count
-        self.data = self.get_data()
+        self.data = _NOT_LOADED
 
     def get_data(self):
         """
         Returns tweets
         """
-        request = GNIP(
-            query=self.query,
-            query_count=self.query_count)
-        return request.get_tweets()
+        if self.data is _NOT_LOADED:
+            request = GNIP(
+                query=self.query,
+                query_count=self.query_count)
+            self.data = request.get_tweets()
+        return self.data

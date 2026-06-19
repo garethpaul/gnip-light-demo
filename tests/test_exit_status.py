@@ -15,10 +15,11 @@ class ExitStatusContractTest(unittest.TestCase):
             "Invalid %s-date format",
             "Invalid %s-date value",
             "Invalid count bucket",
-            "except requests.exceptions.Timeout, e:",
-            "except requests.exceptions.ConnectionError, e:",
-            "except requests.exceptions.HTTPError, e:",
-            "except ResponseBodyError, e:",
+            "except requests.exceptions.Timeout:",
+            "except requests.exceptions.ConnectionError:",
+            "GNIP returned an HTTP error",
+            "except requests.exceptions.RequestException:",
+            "except (ResponseBodyError, IOError):",
         )
         for marker in failure_markers:
             marker_start = source.index(marker)
@@ -30,7 +31,7 @@ class ExitStatusContractTest(unittest.TestCase):
         preview_block = source[preview_start:preview_end]
         self.assertIn("sys.exit()", preview_block)
         self.assertNotIn("sys.exit(1)", preview_block)
-        self.assertEqual(7, source.count("sys.exit(1)"))
+        self.assertEqual(8, source.count("sys.exit(1)"))
         self.assertEqual(1, source.count("sys.exit()"))
         self.assertIn(
             'json.dumps(redacted_rule_payload(self.rule_payload), sort_keys=True)',

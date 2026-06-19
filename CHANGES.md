@@ -1,5 +1,26 @@
 # Changes
 
+## 2026-06-19
+
+- Offline verification uses one explicit, fail-fast Python 3 command. No
+  supported or reproducible Python 2 live environment is claimed.
+- Deep-reviewed PRs #5-#13 and reconciled the separate hosted-evidence root
+  with the maintained linear stack.
+- Made the primary request and wrapper modules importable on Python 3 while
+  preserving Python 2.7-compatible syntax.
+- Documented that the two VCS pins do not form a complete lockfile: direct
+  `Gnacs`/`requests` dependencies are absent and SDK transitive/build
+  dependencies remain floating.
+- Added fixed redacted transport diagnostics, cleanup-error precedence,
+  non-byte response rejection, controlled malformed/deep-JSON failures, and
+  object-only result validation.
+- Bounded provider queries to 2,048 characters and continuation tokens to 4
+  KiB, rejecting blank/control-bearing values before filename or network use.
+- Validated and normalized GNIP UTC posted times instead of accepting malformed
+  calendars or non-UTC offsets.
+- Removed duplicate sample API fetches and made CSV replacement atomic so
+  failed retrieval or rendering cannot truncate existing output.
+
 ## 2026-06-16
 
 - GNIP validation and request failures now exit with a nonzero status while the

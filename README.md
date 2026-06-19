@@ -63,10 +63,15 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
   syntax, timeframe unit coverage, and credential/dependency/request guardrails
   that do not require GNIP credentials. The `lint`, `test`, and `build` targets
   currently delegate to the static baseline.
-- Offline verification uses one explicit, fail-fast Python 3 command while the
-  live client remains Python 2.7. The command defaults to `python3`; set
+- Offline verification uses one explicit, fail-fast Python 3 command. The
+  historical client retains Python 2.7-compatible syntax, but there is no
+  supported or reproducible Python 2 live environment. The command defaults to
+  `python3`; set
   `PYTHON=/path/to/python3` on the Make invocation to use another compatible
-  interpreter for both the checker and its 34 tests.
+  interpreter for both the checker and its tests. The primary request and
+  wrapper modules are now imported and behavior-tested under Python 3 while
+  preserving Python 2.7-compatible syntax; live legacy dependencies remain a
+  separate compatibility risk.
 - `make check` also rejects generated Python bytecode artifacts so local
   compatibility checks do not leave `*.pyc` or `__pycache__` files behind.
 - Use the absolute Makefile path to run the same gates from another working
@@ -77,6 +82,11 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - GitHub Actions runs the offline baseline on Python 3.10, 3.12, and 3.14
   without credentials or legacy VCS dependency installation.
 - Both legacy editable VCS dependencies use HTTPS URLs pinned to immutable 40-character commits. This fixes source selection but does not establish modern runtime compatibility or artifact hash authentication.
+- The manifest does not describe a complete live environment: the code also
+  imports the archived `DrSkippy/Gnacs` parser and `requests`, while the pinned
+  Twitter Ads SDK declares floating transitive dependencies and build-time
+  tooling. Treat `pip install -r requirements.txt` as historical provenance,
+  not a reproducible or audited production installation.
 - `make check` verifies the sample entry points keep live GNIP requests and
   CSV writes behind `__main__` guards.
 - Paged GNIP output filename prefixes are normalized to a conservative filename
@@ -84,8 +94,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Query-preview and no-result output mask query text and pagination tokens, and
   printable query errors omit request and provider response payloads and
   messages.
-- Geo exports remove only the exact GNIP `.000Z` posted-time suffix so seconds
-  ending in zero are not truncated by character-set stripping.
+- Geo exports validate ISO-8601 UTC posted times, reject invalid calendars and
+  non-UTC offsets, and normalize supported fractional values to whole seconds.
 - GNIP request timeout exceptions exit with a clear error instead of falling
   through to result parsing or a traceback.
 - GNIP validation and request failures exit with a nonzero status so automation
@@ -122,10 +132,24 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - GNIP HTTP error responses call `raise_for_status()` so live failures surface instead of being parsed as result data.
 - GNIP page bodies are streamed in 64 KiB chunks, capped at 16 MiB after
   decompression, and closed before JSON parsing continues.
-- GNIP response pages must decode to objects with list results before records
-  are accumulated, paginated, or written to files.
+- GNIP response pages must decode to objects with list results containing only
+  object items before records are accumulated, paginated, or written to files.
 - Activity query payloads include a validated `maxResults` page size capped at
   500; count/timeline payloads omit that activity-only field.
+- Search queries are non-empty, control-free UTF-8 strings capped at the
+  provider's documented 2,048-character limit. Continuation tokens are bounded
+  to 4 KiB and reject controls before reuse.
+- Transport diagnostics use fixed messages and never include raw provider
+  exceptions, credentials, endpoint paths, queries, tokens, or response data.
+  Cleanup failures cannot replace the primary request or stream failure.
+- Sample retrieval is lazy and cached. CSV output is staged beside the target
+  and atomically replaced only after a successful fetch and complete render.
+
+This repository is a historical GNIP/X enterprise sample, not a generally
+available API client. X still documents managed enterprise Full-Archive Search
+and GNIP console access while encouraging migration toward X API v2. Treat
+endpoint, authentication, schema, dependency, and account-contract
+compatibility as live deployment risks. Offline CI makes no provider request.
 
 ## Security and Privacy Notes
 

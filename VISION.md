@@ -29,8 +29,8 @@ Current baseline:
 - `make lint`, `make test`, `make build`, and `make check` verify legacy
   Python syntax when Python 2 is available.
 - Timeframe parsing and invalid-range fallback have local unit coverage.
-- Geo export posted times remove only the exact GNIP `.000Z` suffix so valid
-  seconds digits remain intact.
+- Geo exports validate ISO-8601 UTC posted times and reject invalid calendars
+  or non-UTC offsets before normalization.
 - Dependency-free timeframe tests run on Python 3.10, 3.12, and 3.14 in hosted
   CI while full Python 2 checks remain optional and additive.
 - API-supplied link data is parsed with `ast.literal_eval`, not `exec`.
@@ -43,6 +43,12 @@ Current baseline:
 - Require GNIP response objects and list results before downstream processing.
 - Activity queries send a validated `maxResults` value capped at the provider's
   500-result page boundary, while count queries omit that field.
+- Queries remain within the provider's documented 2,048-character limit, and
+  continuation tokens remain bounded and control-free.
+- Provider JSON and result-item shapes fail closed before downstream handling.
+- Fixed transport diagnostics and redacted exceptions keep credentials,
+  endpoints, queries, tokens, and provider payloads out of errors.
+- Sample retrieval is single-fetch and CSV replacement is atomic.
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
   working tree.
@@ -69,8 +75,15 @@ Current baseline:
   dates are derived.
 - Local verification targets stay available while the legacy Python 2 runtime
   remains static-check only.
-- Offline verification uses one explicit, fail-fast Python 3 command while the
-  live client remains Python 2.7.
+- Offline verification uses one explicit, fail-fast Python 3 command. The
+  historical client retains Python 2.7-compatible syntax, but no supported or
+  reproducible Python 2 live environment is claimed.
+- The primary API and wrapper path imports and runs under Python 3, while live
+  legacy VCS dependencies and managed GNIP/X enterprise access remain explicit
+  deployment risks.
+- The current manifest is historical provenance rather than a lockfile: it
+  omits direct `Gnacs` and `requests` pins and leaves SDK transitive/build
+  dependencies floating.
 
 Next priorities:
 

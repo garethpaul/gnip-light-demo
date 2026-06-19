@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+from __future__ import print_function
+
 __author__="Scott Hendrickson, Josh Montague"
 
 import sys
@@ -38,17 +40,18 @@ try:
 except (ImportError, ValueError):
     from timestamps import remove_millisecond_utc_suffix
 try:
-    from .schema import response_results
+    from .schema import ResponseShapeError, decode_response_payload, response_results
 except (ImportError, ValueError):
-    from schema import response_results
+    from schema import ResponseShapeError, decode_response_payload, response_results
 try:
     from .query import build_rule_payload
 except (ImportError, ValueError):
     from query import build_rule_payload
 
-reload(sys)
-sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
-sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+if sys.version_info[0] < 3:
+    reload(sys)
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
+    sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 
 # formatter of data from API
 TIME_FMT = "%Y%m%d%H%M"
@@ -74,12 +77,12 @@ REQUEST_TIMEOUT = request_timeout()
 def api_date_filter(value, label):
     dt = DATE_RE.match(value)
     if not dt:
-        print >> sys.stderr, "Error. Invalid %s-date format: %s \n"%(label, str(value))
+        print("Error. Invalid %s-date format: %s \n" % (label, str(value)), file=sys.stderr)
         sys.exit(1)
     try:
         datetime.datetime.strptime(value, INPUT_DATE_FMT)
     except ValueError:
-        print >> sys.stderr, "Error. Invalid %s-date value: %s \n"%(label, str(value))
+        print("Error. Invalid %s-date value: %s \n" % (label, str(value)), file=sys.stderr)
         sys.exit(1)
     return ''.join(dt.groups())
 
@@ -134,7 +137,7 @@ class GnipSearchAPI(object):
             if not self.stream_url.endswith("counts.json"):
                 self.stream_url = self.stream_url[:-5] + "/counts.json"
             if count_bucket not in ['day', 'minute', 'hour']:
-                print >> sys.stderr, "Error. Invalid count bucket: %s \n"%str(count_bucket)
+                print("Error. Invalid count bucket: %s \n" % str(count_bucket), file=sys.stderr)
                 sys.exit(1)
 
     def set_dates(self, start, end):
@@ -165,24 +168,33 @@ class GnipSearchAPI(object):
             try:
                 res.raise_for_status()
             except requests.exceptions.HTTPError:
-                res.close()
+                try:
+                    res.close()
+                except Exception:
+                    pass
                 raise
             return read_response_body(res)
-        except requests.exceptions.Timeout, e:
-            print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
+        except requests.exceptions.Timeout:
+            print("Error: GNIP request timed out. Exiting without results.", file=sys.stderr)
             sys.exit(1)
-        except requests.exceptions.ConnectionError, e:
-            print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
+        except requests.exceptions.ConnectionError:
+            print("Error: GNIP connection failed. Exiting without results.", file=sys.stderr)
             sys.exit(1)
-        except requests.exceptions.HTTPError, e:
-            print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
+        except requests.exceptions.HTTPError:
+            print("Error: GNIP returned an HTTP error. Exiting without results.", file=sys.stderr)
             sys.exit(1)
-        except ResponseBodyError, e:
-            print >> sys.stderr, "Error (%s). Exiting without results."%str(e)
+        except requests.exceptions.RequestException:
+            print("Error: GNIP request failed. Exiting without results.", file=sys.stderr)
+            sys.exit(1)
+        except (ResponseBodyError, IOError):
+            print("Error: GNIP response could not be read safely. Exiting without results.", file=sys.stderr)
             sys.exit(1)
         finally:
             if s is not None:
-                s.close()
+                try:
+                    s.close()
+                except Exception:
+                    pass
 
     def parse_JSON(self):
         acs = []
@@ -192,11 +204,13 @@ class GnipSearchAPI(object):
         while repeat:
             doc = self.req()
             try:
-                tmp_response =  json.loads(doc)
+                tmp_response = decode_response_payload(doc)
                 results = response_results(tmp_response)
                 acs.extend(results)
                 if "error" in tmp_response:
                     raise QueryError("GNIP query failed", self.rule_payload, tmp_response)
+            except ResponseShapeError as e:
+                raise QueryError(str(e), self.rule_payload, None)
             except ValueError:
                 raise QueryError("No GNIP response", None, None)
 
@@ -209,22 +223,22 @@ class GnipSearchAPI(object):
                                     "%Y%m%d%H%M%S"))
                               , str(self.file_name_prefix))
                         with codecs.open(file_name, "wb","utf-8") as out:
-                            print >> sys.stderr, "(writing to file ...)"
+                            print("(writing to file ...)", file=sys.stderr)
                             for item in results:
                                 out.write(json.dumps(item)+"\n")
 #                     else:
 #                         # if writing to file, don't keep track of all the data in memory
 #                         acs = []
                 else:
-                    print >> sys.stderr, "no results returned for GNIP query"
+                    print("no results returned for GNIP query", file=sys.stderr)
                 if "next" in tmp_response:
                     try:
                         self.rule_payload["next"] = pagination_guard.accept(tmp_response["next"])
-                    except PaginationError, e:
+                    except PaginationError as e:
                         raise QueryError(str(e), self.rule_payload, tmp_response)
                     repeat = True
                     page_count += 1
-                    print >> sys.stderr, "Fetching page {}...".format(page_count)
+                    print("Fetching page {}...".format(page_count), file=sys.stderr)
                 else:
                     if "next" in self.rule_payload:
                         del self.rule_payload["next"]
@@ -243,12 +257,12 @@ class GnipSearchAPI(object):
             , query = False):
         self.set_index(use_case, count_bucket)
         self.set_dates(start, end)
-        self.name_munger(pt_filter)
         self.rule_payload = build_rule_payload(
             pt_filter,
             max_results=max_results,
             paged=self.paged,
             counts=use_case.startswith("time"))
+        self.name_munger(pt_filter)
 
         if start:
             self.rule_payload["fromDate"] = self.fromDate
@@ -257,8 +271,8 @@ class GnipSearchAPI(object):
         if use_case.startswith("time"):
             self.rule_payload["bucket"] = count_bucket
         if query:
-            print >>sys.stderr, "API query:"
-            print >>sys.stderr, json.dumps(redacted_rule_payload(self.rule_payload), sort_keys=True)
+            print("API query:", file=sys.stderr)
+            print(json.dumps(redacted_rule_payload(self.rule_payload), sort_keys=True), file=sys.stderr)
             sys.exit()
 
         self.doc = []
@@ -332,8 +346,8 @@ class GnipSearchAPI(object):
                 for x in self.doc:
                     try:
                         res.append("{},{},{},{}".format(x["id"], x["postedTime"], x["longitude"], x["latitude"]))
-                    except KeyError, e:
-                        print >> sys.stderr, str(e)
+                    except KeyError as e:
+                        print(str(e), file=sys.stderr)
             else:
                 res = [json.dumps(x) for x in self.doc]
         elif self.use_case.startswith("json"):
@@ -369,8 +383,8 @@ class QueryError(Exception):
 
     def __init__(self, message, payload, response):
         self.message = message
-        self.payload = payload
-        self.response = response
+        self.payload = redacted_rule_payload(payload) if isinstance(payload, dict) else None
+        self.response = None
 
     def __str__(self):
         return repr(self.message)
@@ -383,10 +397,10 @@ if __name__ == "__main__":
 
     term = "captain america"
 
-    print g.query_api(term)
-    print g.query_api(term, 50)
-    print g.query_api(term, 10, "json")
-    print g.query_api(term, 0, "timeline")
-    print g.query_api(term, 10, "users")
-    print g.query_api(term, 10, "rate")
-    print g.query_api(term, 10, "links")
+    print(g.query_api(term))
+    print(g.query_api(term, 50))
+    print(g.query_api(term, 10, "json"))
+    print(g.query_api(term, 0, "timeline"))
+    print(g.query_api(term, 10, "users"))
+    print(g.query_api(term, 10, "rate"))
+    print(g.query_api(term, 10, "links"))

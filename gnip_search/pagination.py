@@ -5,6 +5,7 @@ except NameError:
 
 
 DEFAULT_MAX_PAGES = 1000
+MAX_TOKEN_BYTES = 4096
 
 
 class PaginationError(ValueError):
@@ -23,6 +24,15 @@ class PaginationGuard(object):
     def accept(self, token):
         if not isinstance(token, string_types) or not token.strip():
             raise PaginationError("GNIP pagination token must be a non-empty string")
+        try:
+            token_bytes = token.encode("utf-8")
+        except UnicodeError:
+            raise PaginationError("GNIP pagination token must be valid UTF-8")
+        if len(token_bytes) > MAX_TOKEN_BYTES:
+            raise PaginationError(
+                "GNIP pagination token exceeds the %d-byte limit" % MAX_TOKEN_BYTES)
+        if any(ord(character) < 32 or ord(character) == 127 for character in token):
+            raise PaginationError("GNIP pagination token contains control characters")
         if token in self.seen_tokens:
             raise PaginationError("GNIP pagination token repeated")
         if self.page_count >= self.max_pages:

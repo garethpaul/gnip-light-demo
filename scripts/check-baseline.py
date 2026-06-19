@@ -88,6 +88,8 @@ required_files = [
     "tests/test_schema.py",
     "tests/test_query.py",
     "tests/test_exit_status.py",
+    "tests/test_api_runtime.py",
+    "tests/test_samples.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -133,6 +135,8 @@ schema_tests = read("tests/test_schema.py")
 query_source = read("gnip_search/query.py")
 query_tests = read("tests/test_query.py")
 exit_status_tests = read("tests/test_exit_status.py")
+api_runtime_tests = read("tests/test_api_runtime.py")
+sample_tests = read("tests/test_samples.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -170,6 +174,9 @@ require('PYTHON=${PYTHON:-python3}' in python_preflight
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
 require("def build_rule_payload(" in query_source and
+        "def validated_query(" in query_source and
+        "MAX_QUERY_CHARS = 2048" in query_source and
+        "MAX_QUERY_BYTES = MAX_QUERY_CHARS * 4" in query_source and
         'payload["maxResults"] = request_page_size(max_results, paged=paged)' in query_source and
         "return min(value, MAX_RESULTS_PER_PAGE)" in query_source and
         "if not counts:" in query_source,
@@ -183,13 +190,17 @@ require("test_builds_activity_payload_with_requested_page_size" in query_tests a
         "test_caps_single_requests_at_provider_page_limit" in query_tests and
         "test_paged_searches_force_provider_page_limit" in query_tests and
         "test_count_payload_omits_activity_page_size" in query_tests and
+        "test_rejects_blank_non_string_control_or_oversized_queries" in query_tests and
         "test_rejects_invalid_page_sizes" in query_tests,
         "GNIP query-payload tests must cover inclusion, bounds, counts, and invalid values")
 require("def response_results(payload):" in schema_source and
+        "def decode_response_payload(payload):" in schema_source and
         "isinstance(payload, dict)" in schema_source and
-        "isinstance(results, list)" in schema_source,
+        "isinstance(results, list)" in schema_source and
+        "not isinstance(result, dict)" in schema_source,
         "GNIP response schema must require an object with list results")
-require("from .schema import response_results" in api_source and
+require("from .schema import ResponseShapeError, decode_response_payload, response_results" in api_source and
+        "tmp_response = decode_response_payload(doc)" in api_source and
         "results = response_results(tmp_response)" in api_source and
         "acs.extend(results)" in api_source and
         "for item in results:" in api_source and
@@ -197,21 +208,25 @@ require("from .schema import response_results" in api_source and
         "GNIP page parsing and file output must use validated results")
 require("test_rejects_non_object_pages" in schema_tests and
         "test_rejects_non_list_results" in schema_tests and
-        "test_defaults_missing_results_to_empty_list" in schema_tests,
+        "test_defaults_missing_results_to_empty_list" in schema_tests and
+        "test_rejects_non_object_result_items" in schema_tests and
+        "test_deep_or_malformed_json_fails_with_a_controlled_shape_error" in schema_tests,
         "GNIP response-shape tests must cover malformed and missing containers")
 require("remove_millisecond_utc_suffix(rec[\"postedTime\"])" in api_source and
         '.strip(".000Z")' not in api_source and
         "from .timestamps import remove_millisecond_utc_suffix" in api_source and
         "from timestamps import remove_millisecond_utc_suffix" in api_source,
         "GNIP geo exports must use exact posted-time suffix removal")
-require('MILLISECOND_UTC_SUFFIX = ".000Z"' in timestamps_source and
+require("UTC_TIMESTAMP_RE = re.compile(" in timestamps_source and
         "isinstance(value, string_types)" in timestamps_source and
-        "value.endswith(MILLISECOND_UTC_SUFFIX)" in timestamps_source and
-        "value[:-len(MILLISECOND_UTC_SUFFIX)]" in timestamps_source,
-        "GNIP posted-time helper must remove only the exact millisecond UTC suffix")
+        'datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")' in timestamps_source and
+        "return timestamp" in timestamps_source,
+        "GNIP posted-time helper must validate UTC timestamps before normalization")
 require("test_preserves_seconds_ending_in_zero" in timestamps_tests and
         "test_removes_suffix_from_ordinary_seconds" in timestamps_tests and
         "test_leaves_values_without_exact_suffix_unchanged" in timestamps_tests and
+        "test_accepts_fractional_utc_seconds_and_normalizes_to_whole_seconds" in timestamps_tests and
+        "test_rejects_invalid_calendar_values_and_non_utc_offsets" in timestamps_tests and
         "test_rejects_non_string_or_empty_values" in timestamps_tests,
         "GNIP posted-time tests must cover exact removal and rejected values")
 require("parse_link_values(link_str)" in api_source and "except LinkParseError:" in api_source and
@@ -225,13 +240,13 @@ require("json.dumps(redacted_rule_payload(self.rule_payload), sort_keys=True)" i
         "GNIP preview and exception diagnostics must not expose request or response payloads")
 require('raise QueryError("GNIP query failed", self.rule_payload, tmp_response)' in api_source and 'tmp_response.get("error").get("message")' not in api_source,
         "GNIP provider errors must use a fixed printable message instead of response content")
-require(api_source.count("sys.exit(1)") == 7 and api_source.count("sys.exit()") == 1,
+require(api_source.count("sys.exit(1)") == 8 and api_source.count("sys.exit()") == 1,
         "GNIP validation and request failures must exit nonzero while query preview remains successful")
 require("test_failures_exit_nonzero_and_query_preview_remains_successful" in exit_status_tests and
         "failure_markers = (" in exit_status_tests and
         'self.assertIn("sys.exit(1)", failure_block, marker)' in exit_status_tests and
         'self.assertNotIn("sys.exit(1)", preview_block)' in exit_status_tests and
-        'self.assertEqual(7, source.count("sys.exit(1)"))' in exit_status_tests and
+        'self.assertEqual(8, source.count("sys.exit(1)"))' in exit_status_tests and
         'self.assertEqual(1, source.count("sys.exit()"))' in exit_status_tests,
         "GNIP exit-status behavior must have a dependency-free source contract")
 require("test_redacts_query_and_pagination_token_without_mutating_input" in privacy_tests and "test_accepts_payload_without_sensitive_fields" in privacy_tests,
@@ -256,11 +271,11 @@ for test_contract in [
 ]:
     require(test_contract in links_tests,
             "GNIP link parser tests must include %s" % test_contract)
-require("PaginationGuard()" in api_source and "pagination_guard.accept" in api_source and "except PaginationError, e:" in api_source,
+require("PaginationGuard()" in api_source and "pagination_guard.accept" in api_source and "except PaginationError as e:" in api_source,
         "GNIP paged requests must validate provider next tokens before reuse")
-require("DEFAULT_MAX_PAGES = 1000" in pagination_source and "token in self.seen_tokens" in pagination_source and "self.page_count >= self.max_pages" in pagination_source,
+require("DEFAULT_MAX_PAGES = 1000" in pagination_source and "MAX_TOKEN_BYTES = 4096" in pagination_source and "token in self.seen_tokens" in pagination_source and "self.page_count >= self.max_pages" in pagination_source,
         "GNIP pagination must detect token cycles and enforce the hard page ceiling")
-require("test_rejects_repeated_tokens" in pagination_tests and "test_rejects_tokens_beyond_page_limit" in pagination_tests and "test_rejects_blank_and_non_string_tokens" in pagination_tests,
+require("test_rejects_repeated_tokens" in pagination_tests and "test_rejects_tokens_beyond_page_limit" in pagination_tests and "test_rejects_blank_and_non_string_tokens" in pagination_tests and "test_rejects_oversized_or_control_bearing_tokens" in pagination_tests,
         "GNIP pagination boundary tests must cover cycles, page limits, and malformed tokens")
 require("requests.Session()" in api_source and "s.auth = (self.user, self.password)" in api_source,
         "GNIP requests must keep credentials on the requests session auth field")
@@ -278,7 +293,7 @@ require("stream=True" in api_source and "read_response_body(res)" in api_source 
         "res.text" not in api_source,
         "GNIP requests must stream response bodies through the bounded reader")
 require("res.close()" in api_source and "finally:" in api_source and
-        "\n                s.close()" in api_source,
+        "s.close()" in api_source and "except Exception:" in api_source,
         "GNIP HTTP errors and request sessions must release network resources")
 require("MAX_RESPONSE_BYTES = 16 * 1024 * 1024" in response_source and
         "RESPONSE_CHUNK_BYTES = 64 * 1024" in response_source and
@@ -290,12 +305,19 @@ for test_contract in [
         "test_accepts_exact_limit_and_ignores_empty_chunks",
         "test_rejects_payload_over_limit_and_closes_response",
         "test_closes_response_when_stream_iteration_fails",
+        "test_close_failure_does_not_mask_stream_failure",
 ]:
     require(test_contract in response_tests,
             "GNIP response body tests must include %s" % test_contract)
-require("except requests.exceptions.Timeout, e:" in api_source and
+require("except requests.exceptions.Timeout:" in api_source and
         api_source.index("requests.exceptions.Timeout") < api_source.index("requests.exceptions.ConnectionError"),
         "GNIP request timeouts must fail with a clear message before result parsing")
+require("test_timeout_diagnostic_is_redacted_and_cleanup_cannot_mask_exit" in api_runtime_tests and
+        "test_query_errors_do_not_retain_provider_payloads" in api_runtime_tests,
+        "GNIP runtime tests must cover redacted failures and sensitive payload retention")
+require("test_full_archive_search_fetches_at_most_once" in sample_tests and
+        "test_csv_output_is_not_truncated_when_fetch_fails" in sample_tests,
+        "GNIP samples must cover request deduplication and output preservation")
 require("def safe_file_name_prefix" in api_source and r"[^A-Za-z0-9._-]+" in api_source,
         "GNIP output file prefixes must use a conservative filename character set")
 require("prefix.strip('._')" in api_source and 'prefix or "query"' in api_source,
@@ -341,9 +363,9 @@ require("*.csv" in gitignore and "bliebers.csv" in gitignore,
         "sample CSV exports must stay ignored")
 
 for script_name, source in [("step1.py", step1_source), ("step2.py", step2_source)]:
-    require("def main():" in source and 'if __name__ == "__main__":' in source,
+    require("def main(" in source and 'if __name__ == "__main__":' in source,
             "%s must keep live sample work behind a main guard" % script_name)
-    main_index = source.find("def main():")
+    main_index = source.find("def main(")
     guard_index = source.find('if __name__ == "__main__":')
     require(main_index != -1 and guard_index != -1 and main_index < guard_index,
             "%s must define main before the __main__ guard" % script_name)
@@ -352,8 +374,8 @@ for script_name, source in [("step1.py", step1_source), ("step2.py", step2_sourc
         require(token_index > main_index and token_index < guard_index,
                 "%s must not run GNIP sample calls at import time" % script_name)
 
-open_index = step2_source.find("with open('bliebers.csv', 'wb')")
-require(open_index > step2_source.find("def main():") and open_index < step2_source.find('if __name__ == "__main__":'),
+open_index = step2_source.find("tempfile.mkstemp(")
+require(open_index > step2_source.find("def main(") and open_index < step2_source.find('if __name__ == "__main__":'),
         "step2.py must not write the sample CSV at import time")
 
 require("make lint" in readme and "make test" in readme and "make build" in readme and "make check" in readme and "GNIP_USER_NAME" in readme and "HTTPS URL with a host" in readme,
@@ -418,12 +440,12 @@ require("GNIP link literal parser" in changes and "InvalidLinks" in changes,
         "CHANGES must record GNIP link literal validation")
 require("Removed unconditional query-payload and link-value debug output" in changes,
         "CHANGES must record GNIP query and link log privacy")
-require("exact GNIP `.000Z` posted-time suffix" in read("README.md") and
-        "exact GNIP `.000Z` suffix" in read("SECURITY.md") and
-        "exact GNIP `.000Z` suffix" in read("VISION.md") and
-        "exact GNIP `.000Z` posted-time suffix" in read("AGENTS.md") and
-        "exact" in changes and "`.000Z` suffix removal" in changes,
-        "Project guidance must document exact GNIP posted-time suffix removal")
+require("validate ISO-8601 UTC posted times" in read("README.md") and
+        "validates ISO-8601 UTC posted times" in read("SECURITY.md") and
+        "validate ISO-8601 UTC posted times" in read("VISION.md") and
+        "Validate GNIP posted times as ISO-8601 UTC" in read("AGENTS.md") and
+        "Validated and normalized GNIP UTC posted times" in changes,
+        "Project guidance must document strict GNIP posted-time validation")
 require("status: completed" in plan, "baseline plan must be marked completed")
 endpoint_plan = (ROOT / "docs/plans/2026-06-09-gnip-endpoint-validation.md").read_text()
 require("status: completed" in endpoint_plan, "endpoint validation plan must be marked completed")
@@ -479,10 +501,22 @@ require("status: completed" in link_literal_plan and
         "logging query/link values" in link_literal_plan,
         "GNIP link literal plan must record completed mutation verification")
 response_body_plan = RESPONSE_BODY_PLAN.read_text() if RESPONSE_BODY_PLAN.exists() else ""
-require("status: completed" in response_body_plan and
-        "16 MiB" in response_body_plan and
-        "Mutations removing `stream=True`" in response_body_plan,
-        "GNIP response body plan must record completed streamed-read mutation verification")
+response_body_statuses = re.findall(r"^status: .+$", response_body_plan, flags=re.MULTILINE)
+response_body_sections = response_body_plan.split("## Verification Completed\n", 1)
+response_body_verification = response_body_sections[1] if len(response_body_sections) == 2 else ""
+response_body_required_evidence = (
+    "All four Make gates",
+    "all 17 tests passed in both interpreter paths",
+    "push run `27393392384`",
+    "pull-request run `27393397945`",
+    "push run `27393412678`",
+    "CodeQL run `27402321656`",
+    "Mutations removing `stream=True`",
+)
+require(response_body_statuses == ["status: completed"] and
+        all(item in response_body_verification for item in response_body_required_evidence) and
+        re.search(r"\b(?:pending|todo|tbd|not run)\b", response_body_verification, re.IGNORECASE) is None,
+        "GNIP response body plan must record completed status and actual verification")
 vcs_dependency_plan = VCS_DEPENDENCY_PLAN.read_text() if VCS_DEPENDENCY_PLAN.exists() else ""
 require("status: completed" in vcs_dependency_plan and
         "upstream `master` commit" in vcs_dependency_plan and
@@ -614,8 +648,7 @@ require("validated `maxResults` page size capped at" in readme and
         "gnip_search.query.build_rule_payload" in agents,
         "Project guidance must document bounded GNIP activity page sizes")
 python_preflight_guidance = (
-    "Offline verification uses one explicit, fail-fast Python 3 command while "
-    "the live client remains Python 2.7."
+    "Offline verification uses one explicit, fail-fast Python 3 command."
 )
 require(all(python_preflight_guidance in re.sub(r"\s+", " ", text)
             for text in (readme, agents, vision, changes)),
@@ -694,15 +727,17 @@ python3_test_command = [
 ]
 require(python3_test_command[0] == sys.executable,
         "Python 3 tests must run through the selected checker interpreter")
+py_files = [str(path.relative_to(ROOT)) for path in sorted(ROOT.glob("*.py"))]
+py_files += [str(path.relative_to(ROOT)) for path in sorted((ROOT / "gnip_search").glob("*.py"))]
+py_files += [str(path.relative_to(ROOT)) for path in sorted((ROOT / "tests").glob("*.py"))]
+for filename in py_files:
+    compile((ROOT / filename).read_bytes(), filename, "exec")
 subprocess.check_call(python3_test_command, cwd=str(ROOT), env=env)
 require(not python_artifacts(),
         "Python 3 characterization tests must not generate bytecode artifacts")
 
 python2 = shutil.which("python2")
 if python2:
-    py_files = [str(path.relative_to(ROOT)) for path in sorted(ROOT.glob("*.py"))]
-    py_files += [str(path.relative_to(ROOT)) for path in sorted((ROOT / "gnip_search").glob("*.py"))]
-    py_files += [str(path.relative_to(ROOT)) for path in sorted((ROOT / "tests").glob("*.py"))]
     syntax_check = (
         "import sys\n"
         "for filename in sys.argv[1:]:\n"

@@ -1,7 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import unittest
 
 from gnip_search.query import (
     DEFAULT_MAX_RESULTS,
+    MAX_QUERY_BYTES,
+    MAX_QUERY_CHARS,
     MAX_RESULTS_PER_PAGE,
     QueryPayloadError,
     build_rule_payload,
@@ -33,6 +38,20 @@ class QueryPayloadTest(unittest.TestCase):
             {"query": "cats"},
             build_rule_payload("cats", 0, counts=True),
         )
+
+    def test_rejects_blank_non_string_control_or_oversized_queries(self):
+        invalid_queries = (
+            None,
+            "",
+            "   ",
+            123,
+            "cats\npassword",
+            "x" * (MAX_QUERY_CHARS + 1),
+            "😀" * ((MAX_QUERY_BYTES // 4) + 1),
+        )
+        for query in invalid_queries:
+            with self.assertRaises(QueryPayloadError):
+                build_rule_payload(query, 25)
 
     def test_rejects_invalid_page_sizes(self):
         for value in (0, -1, True, 1.5, "", "ten"):

@@ -50,6 +50,8 @@
 - Build activity query payloads through `gnip_search.query.build_rule_payload`;
   preserve positive page-size validation, the 500-result ceiling, and omission
   of `maxResults` from count/timeline payloads.
+- Keep queries within 2,048 characters and continuation tokens within 4 KiB;
+  reject blank or control-bearing values before network use.
 - GNIP date filters reject malformed delimiters before request payload dates are derived.
 - GNIP link aggregation must use `gnip_search.links.parse_link_values`; never
   restore `exec`, `eval`, or unvalidated iteration over parsed literal shapes.
@@ -57,8 +59,12 @@
   limits when changing provider parsing.
 - Do not log query payloads, extracted link values, credentials, or retrieved
   tweet content.
-- Remove only the exact GNIP `.000Z` posted-time suffix in geo exports; do not
-  restore character-set `strip` handling.
+- Validate GNIP posted times as ISO-8601 UTC calendar values; reject offsets and
+  malformed dates before normalizing supported fractions.
+- Keep transport diagnostics fixed and secret-free. Never include raw provider
+  exception text, credentials, endpoint paths, queries, tokens, or responses.
+- Fetch sample data once before output and replace completed CSV files
+  atomically; do not restore eager or duplicate live requests.
 
 ## Agent workflow
 
@@ -68,6 +74,7 @@
 4. If a required SDK, service credential, or external runtime is unavailable, record the skipped command and why.
 5. Summarize changed files, commands run, and remaining risks or follow-up validation.
 
-Offline verification uses one explicit, fail-fast Python 3 command while the
-live client remains Python 2.7. Override `PYTHON` only with a compatible Python
-3 command so the checker and its unit discovery use the same interpreter.
+Offline verification uses one explicit, fail-fast Python 3 command. The
+historical client retains Python 2.7-compatible syntax, but no supported live
+Python 2 environment is claimed. Override `PYTHON` only with a compatible
+Python 3 command so the checker and its unit discovery use the same interpreter.

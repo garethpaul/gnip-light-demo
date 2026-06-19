@@ -65,13 +65,33 @@ For web services, APIs, sockets, or scraping workflows, prioritize reports invol
 Hosted baseline jobs do not install the legacy editable VCS dependencies or use
 GNIP credentials; they run dependency-free timeframe behavior and static
 security checks with read-only repository permissions.
-Geo export timestamps should remove only the exact GNIP `.000Z` suffix; do not
-use character-set trimming that can silently corrupt provider data.
+Geo export handling validates ISO-8601 UTC posted times, rejects invalid
+calendar values and non-UTC offsets, and normalizes supported fractions to
+whole seconds.
 Activity query page sizes are validated and capped at 500 before request
 construction; count/timeline requests do not receive that activity-only field.
+Queries are bounded to 2,048 characters and continuation tokens to 4 KiB;
+blank or control-bearing values fail before use. Provider JSON must be bounded,
+valid, object-shaped, and contain only object result items.
+Transport diagnostics are fixed and secret-free. They must not include raw
+exception text, credentials, endpoint paths, query text, continuation tokens,
+or provider response bodies. Cleanup errors may be suppressed only to preserve
+an already-active primary failure.
+Sample CSV output is staged in the destination directory and atomically
+replaced after retrieval and rendering complete, preserving existing output on
+failure.
+
+GNIP-branded enterprise access is managed and contract-specific. X currently
+encourages migration toward X API v2. Do not assume the historical endpoint,
+Basic Authentication contract, Activity Streams schema, or pinned legacy VCS
+dependencies are appropriate for a new production deployment.
 Both editable dependencies use immutable VCS commits over HTTPS; this prevents
 branch drift but does not authenticate package artifacts or make the legacy
 Python 2 application stack supported.
+The manifest is incomplete for live execution (`Gnacs` and direct `requests`
+usage are not pinned) and the Twitter Ads SDK declares floating transitive and
+build-time dependencies. Do not treat it as a lockfile or a reproducible,
+vulnerability-audited environment.
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
 
