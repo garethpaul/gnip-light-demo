@@ -388,19 +388,3 @@ class QueryError(Exception):
 
     def __str__(self):
         return repr(self.message)
-
-if __name__ == "__main__":
-    g = GnipSearchAPI("USER"
-            , "PASSWORD"
-            , "STREAM_URL",
-            )
-
-    term = "captain america"
-
-    print(g.query_api(term))
-    print(g.query_api(term, 50))
-    print(g.query_api(term, 10, "json"))
-    print(g.query_api(term, 0, "timeline"))
-    print(g.query_api(term, 10, "users"))
-    print(g.query_api(term, 10, "rate"))
-    print(g.query_api(term, 10, "links"))

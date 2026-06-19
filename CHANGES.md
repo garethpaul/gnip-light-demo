@@ -14,6 +14,8 @@
 - Added fixed redacted transport diagnostics, cleanup-error precedence,
   non-byte response rejection, controlled malformed/deep-JSON failures, and
   object-only result validation.
+- Removed the library module's legacy executable demo that printed live query
+  results; explicit sample entry points remain in `step1.py` and `step2.py`.
 - Bounded provider queries to 2,048 characters and continuation tokens to 4
   KiB, rejecting blank/control-bearing values before filename or network use.
 - Validated and normalized GNIP UTC posted times instead of accepting malformed

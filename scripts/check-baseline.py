@@ -173,6 +173,9 @@ require('PYTHON=${PYTHON:-python3}' in python_preflight
         "Python preflight must reject missing and non-Python-3 commands")
 
 require("exec(" not in api_source, "GNIP API parser must not execute API-supplied strings")
+require('if __name__ == "__main__":' not in api_source and
+        'GnipSearchAPI("USER"' not in api_source,
+        "GNIP library module must not execute or print live demo queries")
 require("def build_rule_payload(" in query_source and
         "def validated_query(" in query_source and
         "MAX_QUERY_CHARS = 2048" in query_source and

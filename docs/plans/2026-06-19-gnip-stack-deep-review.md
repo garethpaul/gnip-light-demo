@@ -21,6 +21,8 @@ evidence root. PRs #6-#13 form the maintained Python/Twitter Ads/GNIP stack.
    live requests. CSV output could be opened before the second fetch failed.
 9. Wrapper query failures were printed and converted to `None`, obscuring a
    nonzero failure path.
+10. CodeQL identified the library module's legacy executable demo as a
+    clear-text live-result logging path.
 
 ## Fix Shape
 
