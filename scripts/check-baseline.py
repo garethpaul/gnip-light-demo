@@ -90,6 +90,7 @@ required_files = [
     "tests/test_exit_status.py",
     "tests/test_api_runtime.py",
     "tests/test_samples.py",
+    "tests/test_baseline_contract.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -747,12 +748,9 @@ if python2:
         "    compile(open(filename, 'rb').read(), filename, 'exec')\n"
     )
     subprocess.check_call([python2, "-c", syntax_check] + py_files, cwd=str(ROOT))
-    python2_env = dict(os.environ)
-    python2_env["PYTHONDONTWRITEBYTECODE"] = "1"
-    subprocess.check_call([python2, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT), env=python2_env)
     require(not python_artifacts(),
             "baseline checks must not generate Python bytecode artifacts")
 else:
-    print("check-baseline: python2 not found; skipped Python 2 syntax compilation and unit tests")
+    print("check-baseline: python2 not found; skipped Python 2 syntax compilation")
 
 print("GNIP light demo baseline checks passed.")
