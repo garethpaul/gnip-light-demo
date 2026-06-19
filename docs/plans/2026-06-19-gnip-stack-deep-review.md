@@ -1,6 +1,6 @@
 # GNIP Stack Deep Review
 
-status: implementation complete; hosted verification pending
+status: completed
 
 ## Scope
 
@@ -50,7 +50,25 @@ is historical provenance rather than a reproducible audited environment.
 
 ## Verification
 
-- Red-first fake API and mutation-sensitive unit tests.
-- Python syntax/import/runtime matrices and external-directory Make gates.
-- Immutable VCS commit existence checks, isolated install/audit where feasible,
-  Gitleaks current-tree and history scans, GitHub checks, and CodeQL.
+## Verification Completed
+
+- 49 tests passed on Python 3.10.16, 3.11.11, 3.12.1, and 3.14.5.
+- All Make aliases, the external-directory gate, and `git diff --check` passed.
+- 25 runtime and test files parsed with Python 2-compatible grammar. A Python
+  2.7 runtime was unavailable locally; uv has no macOS ARM build and Docker was
+  unresponsive.
+- Seven hostile mutations were rejected across query, pagination, response,
+  timestamp, wrapper, sample-caching, and diagnostic boundaries.
+- Both immutable VCS commits were verified upstream. A direct no-dependency
+  package audit reported no known vulnerabilities while warning that the
+  manifest is not fully hashed or transitively pinned.
+- Gitleaks current-tree and full-history scans found no exposures. GitHub
+  CodeQL and Dependabot reported zero open alerts before the aggregate review.
+- Hosted push Check run `27849168447` and pull-request Check run `27849170049`
+  passed on Python 3.10, 3.12, and 3.14 at
+  `bd583c637681d143c1681311e2cd9bf78d877caa`.
+- Hosted CodeQL run `27849168641` passed for Actions and Python, and aggregate
+  CodeQL check `82424708835` passed after removal of the legacy live-result
+  logging block.
+- No live GNIP/X credentials, endpoints, provider payloads, or requests were
+  used.
