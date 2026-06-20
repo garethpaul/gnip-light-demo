@@ -5,7 +5,8 @@
 - Offline verification uses one explicit, fail-fast Python 3 command. No
   supported or reproducible Python 2 live environment is claimed.
 - Kept optional Python 2 verification syntax-only so unsupported interpreters
-  cannot run the Python 3 characterization suite.
+  cannot run the Python 3 characterization suite, and report the exact
+  interpreter used for that syntax probe.
 - Deep-reviewed PRs #5-#13 and reconciled the separate hosted-evidence root
   with the maintained linear stack.
 - Made the primary request and wrapper modules importable on Python 3 while

@@ -742,6 +742,20 @@ require(not python_artifacts(),
 
 python2 = shutil.which("python2")
 if python2:
+    python2_identity = subprocess.check_output([
+        python2,
+        "-c",
+        (
+            "import platform, sys\n"
+            "sys.stdout.write('%s\\t%s\\t%s' % "
+            "(sys.version_info[0], platform.python_implementation(), "
+            "platform.python_version()))\n"
+        ),
+    ], cwd=str(ROOT)).decode("ascii", "replace").split("\t")
+    require(len(python2_identity) == 3 and python2_identity[0] == "2",
+            "python2 command must identify itself as a Python 2 interpreter")
+    print("check-baseline: Python 2 syntax compiler: %s (%s %s)" % (
+        python2, python2_identity[1], python2_identity[2]))
     syntax_check = (
         "import sys\n"
         "for filename in sys.argv[1:]:\n"
