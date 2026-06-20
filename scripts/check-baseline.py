@@ -161,7 +161,7 @@ require(all(re.search(r"\.git@[0-9a-f]{40}#egg=", line) for line in expected_req
         "VCS dependencies must use full commit SHAs")
 require(".PHONY: build check lint test" in makefile
         and "lint test build: check" in makefile
-        and 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' in makefile
+        and 'override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' in makefile
         and "PYTHON ?= python3" in makefile
         and 'PYTHON="$(PYTHON)" "$(ROOT)/scripts/check-python3.sh"' in makefile
         and '"$(PYTHON)" "$(ROOT)/scripts/check-baseline.py"' in makefile,
