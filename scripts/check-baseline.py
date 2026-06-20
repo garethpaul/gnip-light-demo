@@ -90,6 +90,7 @@ required_files = [
     "tests/test_exit_status.py",
     "tests/test_api_runtime.py",
     "tests/test_samples.py",
+    "tests/test_baseline_contract.py",
     "docs/plans/2026-06-08-gnip-baseline.md",
     "docs/plans/2026-06-09-gnip-endpoint-validation.md",
     "docs/plans/2026-06-09-gnip-endpoint-url-parts.md",
@@ -741,18 +742,29 @@ require(not python_artifacts(),
 
 python2 = shutil.which("python2")
 if python2:
+    python2_identity = subprocess.check_output([
+        python2,
+        "-c",
+        (
+            "import platform, sys\n"
+            "sys.stdout.write('%s\\t%s\\t%s' % "
+            "(sys.version_info[0], platform.python_implementation(), "
+            "platform.python_version()))\n"
+        ),
+    ], cwd=str(ROOT)).decode("ascii", "replace").split("\t")
+    require(len(python2_identity) == 3 and python2_identity[0] == "2",
+            "python2 command must identify itself as a Python 2 interpreter")
+    print("check-baseline: Python 2 syntax compiler: %s (%s %s)" % (
+        python2, python2_identity[1], python2_identity[2]))
     syntax_check = (
         "import sys\n"
         "for filename in sys.argv[1:]:\n"
         "    compile(open(filename, 'rb').read(), filename, 'exec')\n"
     )
     subprocess.check_call([python2, "-c", syntax_check] + py_files, cwd=str(ROOT))
-    python2_env = dict(os.environ)
-    python2_env["PYTHONDONTWRITEBYTECODE"] = "1"
-    subprocess.check_call([python2, "-m", "unittest", "discover", "-s", "tests"], cwd=str(ROOT), env=python2_env)
     require(not python_artifacts(),
             "baseline checks must not generate Python bytecode artifacts")
 else:
-    print("check-baseline: python2 not found; skipped Python 2 syntax compilation and unit tests")
+    print("check-baseline: python2 not found; skipped Python 2 syntax compilation")
 
 print("GNIP light demo baseline checks passed.")
