@@ -52,7 +52,9 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Set `GNIP_USER_NAME`, `GNIP_PASSWORD`, and `GNIP_SEARCH_ENDPOINT` in the local environment before live API calls.
 - `GNIP_SEARCH_ENDPOINT` must be an HTTPS URL with a host and no embedded credentials, query string, or fragment.
 - `step1.py` prints retrieved data for the sample query.
-- `step2.py` writes the sample CSV export; generated exports are intentionally ignored.
+- `step2.py` writes canonical numeric Twitter actor IDs to the sample CSV
+  export; malformed provider IDs are rejected and generated exports are
+  intentionally ignored.
 - Importing the sample scripts does not trigger live GNIP requests or CSV
   writes; run them directly to execute their sample `main()` functions.
 - Missing GNIP environment variables raise a clear configuration error before the request is built.

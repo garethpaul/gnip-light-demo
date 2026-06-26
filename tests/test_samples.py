@@ -68,6 +68,58 @@ class SampleBehaviorTest(unittest.TestCase):
         finally:
             shutil.rmtree(temp_dir)
 
+    def test_csv_output_rejects_noncanonical_actor_ids_atomically(self):
+        class MalformedActorSearch(object):
+            def __init__(self, query, query_count):
+                pass
+
+            def get_data(self):
+                return [{"actor": {"id": "id:twitter.com:=2+3"}}]
+
+        tweets_module = types.ModuleType("gnip_search.tweets")
+        tweets_module.FullArchiveSearch = MalformedActorSearch
+        sys.modules["gnip_search.tweets"] = tweets_module
+        sys.modules.pop("step2", None)
+        step2 = importlib.import_module("step2")
+
+        temp_dir = tempfile.mkdtemp()
+        try:
+            output_path = os.path.join(temp_dir, "bliebers.csv")
+            with open(output_path, "w") as output_file:
+                output_file.write("existing-data\n")
+
+            with self.assertRaisesRegex(ValueError, "canonical Twitter actor ID"):
+                step2.main(output_path=output_path)
+
+            with open(output_path, "r") as output_file:
+                self.assertEqual("existing-data\n", output_file.read())
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_csv_output_preserves_canonical_numeric_actor_id(self):
+        class CanonicalActorSearch(object):
+            def __init__(self, query, query_count):
+                pass
+
+            def get_data(self):
+                return [{"actor": {"id": "id:twitter.com:12003"}}]
+
+        tweets_module = types.ModuleType("gnip_search.tweets")
+        tweets_module.FullArchiveSearch = CanonicalActorSearch
+        sys.modules["gnip_search.tweets"] = tweets_module
+        sys.modules.pop("step2", None)
+        step2 = importlib.import_module("step2")
+
+        temp_dir = tempfile.mkdtemp()
+        try:
+            output_path = os.path.join(temp_dir, "bliebers.csv")
+            step2.main(output_path=output_path)
+
+            with open(output_path, "r") as output_file:
+                self.assertEqual("12003", output_file.read().strip())
+        finally:
+            shutil.rmtree(temp_dir)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -320,8 +320,14 @@ require("test_timeout_diagnostic_is_redacted_and_cleanup_cannot_mask_exit" in ap
         "test_query_errors_do_not_retain_provider_payloads" in api_runtime_tests,
         "GNIP runtime tests must cover redacted failures and sensitive payload retention")
 require("test_full_archive_search_fetches_at_most_once" in sample_tests and
-        "test_csv_output_is_not_truncated_when_fetch_fails" in sample_tests,
-        "GNIP samples must cover request deduplication and output preservation")
+        "test_csv_output_is_not_truncated_when_fetch_fails" in sample_tests and
+        "test_csv_output_rejects_noncanonical_actor_ids_atomically" in sample_tests and
+        "test_csv_output_preserves_canonical_numeric_actor_id" in sample_tests,
+        "GNIP samples must cover request deduplication, actor IDs, and output preservation")
+require("def canonical_twitter_actor_id" in step2_source and
+        "TWITTER_ACTOR_ID_RE" in step2_source and
+        '.strip("id:twitter.com:")' not in step2_source,
+        "step2.py must validate canonical numeric Twitter actor IDs")
 require("def safe_file_name_prefix" in api_source and r"[^A-Za-z0-9._-]+" in api_source,
         "GNIP output file prefixes must use a conservative filename character set")
 require("prefix.strip('._')" in api_source and 'prefix or "query"' in api_source,

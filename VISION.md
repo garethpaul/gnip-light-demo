@@ -49,6 +49,7 @@ Current baseline:
 - Fixed transport diagnostics and redacted exceptions keep credentials,
   endpoints, queries, tokens, and provider payloads out of errors.
 - Sample retrieval is single-fetch and CSV replacement is atomic.
+- Sample CSV rows contain only canonical numeric Twitter actor IDs.
 - Local environment files and sample exports stay ignored.
 - Baseline checks should not leave generated Python bytecode artifacts in the
   working tree.
