@@ -1,5 +1,23 @@
 # Changes
 
+## 2026-06-26T22:54:06Z
+
+- **Priority:** Security and exported-data integrity.
+- **Summary:** Replaced character-set stripping of provider actor IDs with an
+  exact `id:twitter.com:<digits>` boundary so malformed or formula-like values
+  cannot be written into the sample CSV.
+- **Files:** `step2.py`, `tests/test_samples.py`,
+  `scripts/check-baseline.py`, `README.md`, `SECURITY.md`, `VISION.md`, and
+  `CHANGES.md`.
+- **Tests:** Added atomic rejection and canonical numeric output regressions;
+  `make check` passes all 55 Python 3 tests and baseline contracts.
+- **Findings:** Existing atomic publication already preserves prior output when
+  rendering raises, so validation belongs inside the staged render loop.
+- **Blockers:** Python 2 is unavailable locally; the repository's supported
+  Python 3 gate and optional syntax-only Python 2 probe remain authoritative.
+- **Next action:** Open a focused pull request and require hosted checks on its
+  exact head SHA.
+
 ## 2026-06-19
 
 - Offline verification uses one explicit, fail-fast Python 3 command. No

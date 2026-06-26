@@ -2,8 +2,27 @@
 from gnip_search.tweets import FullArchiveSearch
 import csv
 import os
+import re
 import sys
 import tempfile
+
+
+try:
+    string_types = (basestring,)
+except NameError:
+    string_types = (str,)
+
+
+TWITTER_ACTOR_ID_RE = re.compile(r"^id:twitter\.com:([0-9]+)$")
+
+
+def canonical_twitter_actor_id(value):
+    if not isinstance(value, string_types):
+        raise ValueError("Expected canonical Twitter actor ID")
+    match = TWITTER_ACTOR_ID_RE.match(value)
+    if not match:
+        raise ValueError("Expected canonical Twitter actor ID")
+    return match.group(1)
 
 
 def main(output_path='bliebers.csv'):
@@ -26,7 +45,7 @@ def main(output_path='bliebers.csv'):
                                    quoting=csv.QUOTE_MINIMAL)
         for tweet in results:
             user_id = tweet['actor']['id']
-            bieber_writer.writerow([user_id.strip("id:twitter.com:")])
+            bieber_writer.writerow([canonical_twitter_actor_id(user_id)])
         csvfile.flush()
         os.fsync(csvfile.fileno())
         csvfile.close()

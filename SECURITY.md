@@ -80,6 +80,9 @@ an already-active primary failure.
 Sample CSV output is staged in the destination directory and atomically
 replaced after retrieval and rendering complete, preserving existing output on
 failure.
+Provider actor IDs must match `id:twitter.com:<digits>` before their numeric
+portion is written to CSV; malformed or formula-like cells fail before atomic
+replacement.
 
 GNIP-branded enterprise access is managed and contract-specific. X currently
 encourages migration toward X API v2. Do not assume the historical endpoint,
