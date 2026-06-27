@@ -22,6 +22,8 @@ static contract.
 ## Requirements
 
 - Derive the repository root from `MAKEFILE_LIST`.
+- Preserve spaces in the loaded Makefile path before Make list functions select
+  the final file.
 - Invoke `scripts/check-baseline.py` through its repository-rooted path.
 - Add static contracts for the rooted Makefile, completed plan, external-run
   evidence, and synchronized guidance.
@@ -35,6 +37,7 @@ static contract.
 - Run all offline tests and `scripts/check-baseline.py` on Python 3 and Python
   2 through all four Make gates at repository root.
 - Run all four Make gates from /tmp through the absolute Makefile path.
+- Run the full gate through an absolute Makefile path inside a spaced checkout.
 - Reject isolated root-derivation, checker-command, plan-status, plan-evidence,
   and documentation mutations.
 - Run workflow parsing, `git diff --check`, exact-path review, secret scanning,
@@ -51,6 +54,8 @@ static contract.
 
 - Derived the repository root from the loaded Makefile and invoked the existing
   checker through its absolute repository path.
+- Protected spaces with a sentinel while selecting and resolving the loaded
+  Makefile, then restored them in the final repository root.
 - Extended the baseline with rooted-Makefile, completed-plan, external-run, and
   synchronized-guidance contracts.
 - Preserved production modules, tests, dependencies, workflows, credential
@@ -61,6 +66,8 @@ static contract.
 - All 27 tests passed on Python 3 and Python 2.
 - All four Make gates (`make lint`, `make test`, `make build`, and `make check`)
   passed at repository root and from /tmp through the absolute Makefile path.
+- The current 56-test full gate passed from an external directory through an
+  absolute Makefile path inside a spaced checkout on GNU Make 4.2 and 4.4.
 - The root-derivation mutation failed.
 - The checker-command mutation failed.
 - The plan-status mutation failed.

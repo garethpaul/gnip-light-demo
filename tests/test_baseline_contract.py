@@ -44,6 +44,38 @@ class BaselineContractTest(unittest.TestCase):
         self.assertEqual("", stdout)
         self.assertIn("Python 3 is required: true", stderr)
 
+    def test_absolute_makefile_path_with_spaces_runs_full_gate(self):
+        if os.environ.get("GNIP_BASELINE_CONTRACT_CHILD") == "1":
+            return
+
+        temp_dir = tempfile.mkdtemp(prefix="gnip-make-space-contract-")
+        try:
+            copied_root = os.path.join(temp_dir, "repository with spaces")
+            caller_root = os.path.join(temp_dir, "external caller")
+            shutil.copytree(
+                ROOT,
+                copied_root,
+                ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc", "*.pyo"),
+            )
+            os.mkdir(caller_root)
+
+            env = dict(os.environ)
+            env["GNIP_BASELINE_CONTRACT_CHILD"] = "1"
+            process = subprocess.Popen(
+                ["make", "-f", os.path.join(copied_root, "Makefile"), "check"],
+                cwd=caller_root,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
+            stdout, stderr = process.communicate()
+
+            self.assertEqual(0, process.returncode, stderr)
+            self.assertIn("GNIP light demo baseline checks passed.", stdout)
+        finally:
+            shutil.rmtree(temp_dir)
+
     def test_python2_probe_invokes_only_syntax_compilation(self):
         if os.environ.get("GNIP_BASELINE_CONTRACT_CHILD") == "1":
             return
