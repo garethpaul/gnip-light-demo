@@ -138,6 +138,7 @@ query_tests = read("tests/test_query.py")
 exit_status_tests = read("tests/test_exit_status.py")
 api_runtime_tests = read("tests/test_api_runtime.py")
 sample_tests = read("tests/test_samples.py")
+baseline_contract_tests = read("tests/test_baseline_contract.py")
 wrapper_source = read("gnip_search/gnip_wrapper.py")
 step1_source = read("step1.py")
 step2_source = read("step2.py")
@@ -161,11 +162,19 @@ require(all(re.search(r"\.git@[0-9a-f]{40}#egg=", line) for line in expected_req
         "VCS dependencies must use full commit SHAs")
 require(".PHONY: build check lint test" in makefile
         and "lint test build: check" in makefile
-        and 'override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' in makefile
+        and "override empty :=" in makefile
+        and "override space := $(empty) $(empty)" in makefile
+        and "override makefile_space := __GNIP_MAKEFILE_SPACE__" in makefile
+        and "override encoded_makefile_list := $(patsubst $(makefile_space)%,%,$(subst $(space),$(makefile_space),$(MAKEFILE_LIST)))" in makefile
+        and 'override ROOT := $(subst $(makefile_space),$(space),$(abspath $(dir $(lastword $(encoded_makefile_list)))))' in makefile
         and "PYTHON ?= python3" in makefile
         and 'PYTHON="$(PYTHON)" "$(ROOT)/scripts/check-python3.sh"' in makefile
         and '"$(PYTHON)" "$(ROOT)/scripts/check-baseline.py"' in makefile,
         "Makefile must expose configurable, preflighted gate targets")
+require("test_absolute_makefile_path_with_spaces_runs_full_gate" in baseline_contract_tests
+        and '"repository with spaces"' in baseline_contract_tests
+        and '["make", "-f", os.path.join(copied_root, "Makefile"), "check"]' in baseline_contract_tests,
+        "Baseline contracts must cover an absolute Makefile path inside a spaced checkout")
 require('PYTHON=${PYTHON:-python3}' in python_preflight
         and 'command -v "$PYTHON"' in python_preflight
         and 'sys.version_info[0]' in python_preflight
@@ -621,7 +630,9 @@ require(location_independent_make_statuses == ["status: completed"] and
                   re.IGNORECASE) is None,
         "Location-independent Make plan must record completed status and actual verification")
 require("absolute Makefile path" in readme and
-        "Made GNIP verification independent" in changes,
+        "checkout path contains spaces" in readme and
+        "Made GNIP verification independent" in changes and
+        "spaced checkout paths" in changes,
         "Project guidance must document location-independent Make verification")
 max_results_plan = MAX_RESULTS_PLAN.read_text() if MAX_RESULTS_PLAN.exists() else ""
 max_results_statuses = re.findall(

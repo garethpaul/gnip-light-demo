@@ -1,5 +1,65 @@
 # Changes
 
+## 2026-06-26 17:46 PDT - P2 - Support spaced Makefile paths
+
+### Summary
+
+Completed the pending location-independent Make fix so absolute Makefiles
+loaded from spaced checkout paths still resolve the repository root and run the
+full offline gate.
+
+### Work completed
+
+- Encoded spaces before selecting the final entry in `MAKEFILE_LIST`, then
+  restored them only after deriving the absolute repository root.
+- Added a full-gate regression that invokes the absolute Makefile from an
+  external directory under a spaced checkout path.
+- Preserved hostile `ROOT` override protection and the shared Python preflight.
+
+### Threads
+
+- Continued: `fix/make-space-safe-root-20260627` — audited and completed the
+  existing unmerged branch; no additional thread was started.
+
+### Files changed
+
+- `Makefile` — derive `ROOT` without splitting a spaced Makefile path.
+- `tests/test_baseline_contract.py` — exercise the complete external spaced-path
+  invocation.
+- `scripts/check-baseline.py` — enforce the new root expression and regression.
+- `AGENTS.md`, `README.md`, and
+  `docs/plans/2026-06-13-location-independent-make.md` — synchronize the
+  maintained verification contract and evidence.
+
+### Validation
+
+- `make check`, `make lint`, `make test`, and `make build` — passed all 56
+  tests and baseline checks.
+- `/usr/bin/make -C /tmp -f "$PWD/Makefile" check` — passed from an external
+  caller directory.
+- `/usr/bin/make ROOT=/tmp/hostile check` — passed with the caller override
+  ignored.
+- Hosted matrix evidence recorded by the branch — the full gate passed under
+  GNU Make 4.2 and 4.4 from a spaced checkout.
+- `git diff --check` — passed.
+- An extra direct `py_compile` audit created forbidden `__pycache__` artifacts;
+  the baseline contract rejected them as designed. The generated files were
+  removed and the authoritative `make check` gate passed again.
+
+### Bugs / findings
+
+- P2 developer workflow: GNU Make tokenized a spaced absolute Makefile path in
+  `MAKEFILE_LIST`, redirecting recipe paths away from the repository.
+
+### Blockers
+
+- Python 2 is unavailable locally; the optional syntax-only probe was skipped.
+
+### Next action
+
+- Open a focused pull request, run the required review, and merge only the exact
+  head after hosted checks pass.
+
 ## 2026-06-26T22:54:06Z
 
 - **Priority:** Security and exported-data integrity.
