@@ -188,7 +188,7 @@ require('if __name__ == "__main__":' not in api_source and
         "GNIP library module must not execute or print live demo queries")
 require("def build_rule_payload(" in query_source and
         "def validated_query(" in query_source and
-        "MAX_QUERY_CHARS = 2048" in query_source and
+        re.search(r"^MAX_QUERY_CHARS = 2048$", query_source, re.MULTILINE) and
         "MAX_QUERY_BYTES = MAX_QUERY_CHARS * 4" in query_source and
         'payload["maxResults"] = request_page_size(max_results, paged=paged)' in query_source and
         "return min(value, MAX_RESULTS_PER_PAGE)" in query_source and
@@ -266,9 +266,9 @@ require("test_redacts_query_and_pagination_token_without_mutating_input" in priv
         "GNIP diagnostic redaction must have dependency-free behavior coverage")
 require("ast.literal_eval(serialized)" in links_source and
         "isinstance(parsed, (list, tuple, set))" in links_source and
-        "MAX_SERIALIZED_LINK_CHARS = 65536" in links_source and
-        "MAX_LINK_VALUES = 1000" in links_source and
-        "MAX_LINK_CHARS = 4096" in links_source and
+        re.search(r"^MAX_SERIALIZED_LINK_CHARS = 65536$", links_source, re.MULTILINE) and
+        re.search(r"^MAX_LINK_VALUES = 1000$", links_source, re.MULTILINE) and
+        re.search(r"^MAX_LINK_CHARS = 4096$", links_source, re.MULTILINE) and
         "GNIP link values exceed the accepted boundaries" in links_source,
         "GNIP link parsing must use literal evaluation with strict shape validation")
 require("eval(" not in links_source.replace("literal_eval(", "") and "exec(" not in links_source,
@@ -286,7 +286,7 @@ for test_contract in [
             "GNIP link parser tests must include %s" % test_contract)
 require("PaginationGuard()" in api_source and "pagination_guard.accept" in api_source and "except PaginationError as e:" in api_source,
         "GNIP paged requests must validate provider next tokens before reuse")
-require("DEFAULT_MAX_PAGES = 1000" in pagination_source and "MAX_TOKEN_BYTES = 4096" in pagination_source and "token in self.seen_tokens" in pagination_source and "self.page_count >= self.max_pages" in pagination_source,
+require(re.search(r"^DEFAULT_MAX_PAGES = 1000$", pagination_source, re.MULTILINE) and re.search(r"^MAX_TOKEN_BYTES = 4096$", pagination_source, re.MULTILINE) and "token in self.seen_tokens" in pagination_source and "self.page_count >= self.max_pages" in pagination_source,
         "GNIP pagination must detect token cycles and enforce the hard page ceiling")
 require("test_rejects_repeated_tokens" in pagination_tests and "test_rejects_tokens_beyond_page_limit" in pagination_tests and "test_rejects_blank_and_non_string_tokens" in pagination_tests and "test_rejects_oversized_or_control_bearing_tokens" in pagination_tests,
         "GNIP pagination boundary tests must cover cycles, page limits, and malformed tokens")
